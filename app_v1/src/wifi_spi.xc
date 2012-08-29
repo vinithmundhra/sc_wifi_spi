@@ -17,13 +17,17 @@
 /*---------------------------------------------------------------------------
  include files
  ---------------------------------------------------------------------------*/
+#include <xs1.h>
 #include <print.h>
 #include "wifi_spi.h"
 #include "spi_conf.h"
+#include "spi_handler.h"
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+// Handle unsolicited commands every 500 ms
+#define TIME_UNSOLICITED_COMMAND_HANDLE   50000000
 
 /*---------------------------------------------------------------------------
  ports and clocks
@@ -48,28 +52,42 @@
 /*---------------------------------------------------------------------------
  t_wifi
  ---------------------------------------------------------------------------*/
-void t_wifi(chanend c_wifi_app,
-            spi_master_interface &spi_if,
-            out port p_wifi_pwr_en)
+void t_wifi(chanend c_wifi_app, in port p_spi_irq)
 {
-    char buffer[100];
+    timer t;
+    unsigned time;
 
-    // Enable Wi-Fi power
-    p_wifi_pwr_en <: 1;
+    spih_open();
 
-    // Init SPI
-    spi_master_init(spi_if, DEFAULT_SPI_CLOCK_DIV);
+    t :> time;
+    time += TIME_UNSOLICITED_COMMAND_HANDLE;
 
     while(1)
     {
         select
         {
-            case spi_if.p_spi_irq when pinseq(0) :> void:
+            case p_spi_irq when pinseq(0) :> void:
             {
-                spi_master_read(spi_if, buffer);
-                printstrln("Read Device due to IRQ request");
+                printstrln("IRQ Low");
+                spih_irq_handler();
                 break;
-            } // case IRQ low
+            } // case p_spi_irq when pinseq(0) :> void:
+
+            case t when timerafter(time) :> void:
+            {
+                // hci_unsolicited_command_handle();
+                time += TIME_UNSOLICITED_COMMAND_HANDLE;
+                break;
+            } // case t when timerafter(time) :> void:
+
+            /*
+            case c_wifi_app :> int x:
+            {
+                application_specific( outside_module );
+                break;
+            }
+            */
+
         } // select
     } // while(1)
 }

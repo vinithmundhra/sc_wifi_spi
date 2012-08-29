@@ -21,6 +21,7 @@
 #include <xs1.h>
 
 #include "wifi_spi.h"
+#include "spi_master.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -36,11 +37,14 @@ on stdcore[0]: spi_master_interface spi_if =
   XS1_PORT_1L, // MOSI
   XS1_PORT_1M, // CLK
   XS1_PORT_1O, // MISO
-  XS1_PORT_1P, // nCS
-  XS1_PORT_1N  // nIRQ
 };
 
-on stdcore[0]: out port p_wifi_pwr_en = XS1_PORT_1K;
+on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
+{
+    XS1_PORT_1P, // nCS
+    XS1_PORT_1N, // nIRQ
+    XS1_PORT_1K  // Wifi power enable
+};
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -73,9 +77,7 @@ int main(void)
 
     par
     {
-        on stdcore[0]: t_wifi(c_wifi_app,
-                              spi_if,
-                              p_wifi_pwr_en);
+        on stdcore[0]: t_wifi(c_wifi_app, spi_tiwisl_ctrl.p_spi_irq);
     }
 
     return 0;

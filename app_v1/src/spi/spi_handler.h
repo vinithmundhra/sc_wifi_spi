@@ -14,12 +14,14 @@
 
  ===========================================================================*/
 
-#ifndef _wifi_spi_h_
-#define _wifi_spi_h_
+#ifndef _spi_handler_h_
+#define _spi_handler_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
+#include <xccompat.h>
+#include "spi_tiwisl.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -36,6 +38,7 @@
 /*---------------------------------------------------------------------------
  extern variables
  ---------------------------------------------------------------------------*/
+extern unsigned char wlan_tx_buffer[];
 
 /*---------------------------------------------------------------------------
  prototypes
@@ -43,16 +46,44 @@
 
 /*==========================================================================*/
 /**
- *  The Wi-Fi thread. It must initialize SPI and Wi-Fi modules with correct
- *  settings.
+ *  Description
  *
- *  \param c_wifi   channel connecting with the app and this thread
- *  \param spi_if   SPI interface ports (5 wire)
- *  \param p_wifi_pwr_en    Wi-Fi power enable port (output)
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
  *  \return None
- *
  **/
-void t_wifi(chanend c_wifi_app, in port p_spi_irq);
+void spih_open();
 
-#endif // _wifi_spi_h_
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void spih_close();
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void spih_write(REFERENCE_PARAM(unsigned char, user_buffer),
+                unsigned short num_bytes);
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void spih_irq_handler();
+
+#endif // _spi_handler_h_
 /*==========================================================================*/
