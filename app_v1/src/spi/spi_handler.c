@@ -1,33 +1,58 @@
-// Copyright (c) 2011, XMOS Ltd., All rights reserved
-// This software is freely distributable under a derivative of the
-// University of Illinois/NCSA Open Source License posted in
-// LICENSE.txt and at <http://github.xcore.com/>
 
-/*===========================================================================
- Filename: ${file_name}
- Project :
- Author  : ${user}
- Version :
- Purpose
- -----------------------------------------------------------------------------
+/*****************************************************************************
+*
+*  spi.c - CC3000 Host Driver Implementation.
+*  Copyright (C) 2011 Texas Instruments Incorporated - http://www.ti.com/
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*    Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+*
+*    Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the   
+*    distribution.
+*
+*    Neither the name of Texas Instruments Incorporated nor the names of
+*    its contributors may be used to endorse or promote products derived
+*    from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+*  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
+*  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+*  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+*  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+*  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*
+*****************************************************************************/
 
-
- ===========================================================================*/
-
-/*---------------------------------------------------------------------------
- include files
- ---------------------------------------------------------------------------*/
+//*****************************************************************************
+//
+//! \addtogroup link_buff_api
+//! @{
+//
+//*****************************************************************************
 #include "spi_handler.h"
+#include "spi_tiwisl.h"
 #include "hci.h"
+#include "evnt_handler.h"
 
-/*---------------------------------------------------------------------------
- constants
- ---------------------------------------------------------------------------*/
 #define READ                    3
 #define WRITE                   1
+
 #define HI(value)               (((value) & 0xFF00) >> 8)
 #define LO(value)               ((value) & 0x00FF)
 #define HEADERS_SIZE_EVNT       (SPI_HEADER_SIZE + 5)
+
+#define SPI_HEADER_SIZE			(5)
 
 #define eSPI_STATE_POWERUP 				 (0)
 #define eSPI_STATE_INITIALIZED  		 (1)
@@ -38,21 +63,12 @@
 #define eSPI_STATE_READ_IRQ				 (6)
 #define eSPI_STATE_READ_FIRST_PORTION	 (7)
 #define eSPI_STATE_READ_EOT				 (8)
-#define SPI_BUFFER_SIZE					 (1700)
 
-/*---------------------------------------------------------------------------
- ports and clocks
- ---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------
- typedefs
- ---------------------------------------------------------------------------*/
-typedef struct spi_hdr_t_
-{
-    unsigned char   cmd;
-    unsigned short  length;
-    unsigned char   pad[2];
-}spi_hdr_t;
+// The magic number that resides at the end of the TX/RX buffer (1 byte after the allocated size)
+// for the purpose of detection of the overrun. The location of the memory where the magic number 
+// resides shall never be written. In case it is written - the overrun occured and either recevie function
+// or send function will stuck forever.
+#define CC3000_BUFFER_MAGIC_NUMBER (0xDE)
 
 typedef struct spi_info_t_
 {
@@ -67,20 +83,18 @@ typedef struct spi_info_t_
  global variables
  ---------------------------------------------------------------------------*/
 spi_info_t spi_info;
-char spi_buffer[SPI_BUFFER_SIZE];
-unsigned char wlan_tx_buffer[SPI_BUFFER_SIZE];
+char spi_buffer[CC3000_RX_BUFFER_SIZE];
+unsigned char wlan_tx_buffer[CC3000_TX_BUFFER_SIZE];
 
-/*---------------------------------------------------------------------------
- static variables
- ---------------------------------------------------------------------------*/
 // Static buffer for 5 bytes of SPI HEADER
-static spi_hdr_t spi_read_hdr = {READ, 0, "0"};
+unsigned char spi_read_hdr[] = {READ, 0, 0, 0, 0};
+
 
 /*---------------------------------------------------------------------------
  static prototypes
  ---------------------------------------------------------------------------*/
 static void spiw_read_header();
-static int  spiw_read_data();
+static long spiw_read_data();
 static void spiw_rx_processing();
 static void spiw_cont_read();
 
@@ -95,28 +109,22 @@ static void spiw_read_header()
 /*---------------------------------------------------------------------------
  spiw_read_data
  ---------------------------------------------------------------------------*/
-static int spiw_read_data()
+static long spiw_read_data()
 {
-    hci_hdr_t *hci_hdr;
-    int data_to_recv;
-	hci_evnt_hdr_t *hci_evnt_hdr;
-	unsigned char *evnt_buff;
-	hci_data_hdr_t *data_hdr;
+    long data_to_recv;
+	unsigned char *evnt_buff, type;
 
     //determine what type of packet we have
     evnt_buff =  spi_info.rx_pkt;
     data_to_recv = 0;
-	hci_hdr = (hci_hdr_t *)(evnt_buff + sizeof(spi_hdr_t));
+	STREAM_TO_UINT8((char *)(evnt_buff + SPI_HEADER_SIZE), HCI_PACKET_TYPE_OFFSET, type);
 
-    switch(hci_hdr->type)
+    switch(type)
     {
         case HCI_TYPE_DATA:
         {
-			data_hdr = (hci_data_hdr_t *)(evnt_buff + sizeof(spi_hdr_t));
-
 			// We need to read the rest of data..
-			data_to_recv = data_hdr->length;
-
+			STREAM_TO_UINT16((char *)(evnt_buff + SPI_HEADER_SIZE), HCI_DATA_LENGTH_OFFSET, data_to_recv);
 			if (!((HEADERS_SIZE_EVNT + data_to_recv) & 1))
 			{
     	        data_to_recv++;
@@ -130,11 +138,10 @@ static int spiw_read_data()
         }
         case HCI_TYPE_EVNT:
         {
-            //configure buffer to read rest of the data
-            hci_evnt_hdr = (hci_evnt_hdr_t *)hci_hdr;
-
 			// Calculate the rest length of the data
-            data_to_recv = hci_evnt_hdr->length - 1;
+			//
+            STREAM_TO_UINT8((char *)(evnt_buff + SPI_HEADER_SIZE), HCI_EVENT_LENGTH_OFFSET, data_to_recv);
+			data_to_recv -= 1;
 
 			// Add padding byte if needed
 			if ((HEADERS_SIZE_EVNT + data_to_recv) & 1)
@@ -161,8 +168,16 @@ static int spiw_read_data()
  ---------------------------------------------------------------------------*/
 static void spiw_rx_processing()
 {
+    // The magic number that resides at the end of the TX/RX buffer (1 byte after the allocated size)
+    // for the purpose of detection of the overrun. If the magic number is overriten - buffer overrun 
+    // occurred - and we will stuck here forever!
+	if (spi_info.rx_pkt[CC3000_RX_BUFFER_SIZE - 1] != CC3000_BUFFER_MAGIC_NUMBER)
+	{
+		while(1);
+	}
 	spi_info.state = eSPI_STATE_IDLE;
-	//spi_info.rx_handler(spi_info.rx_pkt + sizeof(spi_hdr_t));
+	// todo add receive handler here
+	//SpiReceiveHandler(spi_info.rx_pkt + SPI_HEADER_SIZE);
 }
 
 /*---------------------------------------------------------------------------
@@ -186,6 +201,10 @@ void spih_open()
     spi_info.state = eSPI_STATE_POWERUP;
 	spi_info.tx_pkt = 0;
 	spi_info.rx_pkt = (unsigned char *)spi_buffer;
+    
+    spi_buffer[CC3000_RX_BUFFER_SIZE - 1] = CC3000_BUFFER_MAGIC_NUMBER;
+	wlan_tx_buffer[CC3000_TX_BUFFER_SIZE - 1] = CC3000_BUFFER_MAGIC_NUMBER;
+    
     spi_init();
 }
 
@@ -218,14 +237,17 @@ void spih_write(unsigned char *user_buffer, unsigned short num_bytes)
     user_buffer[3] = 0;
     user_buffer[4] = 0;
 
-    num_bytes += (sizeof(spi_hdr_t) + padding);
+    num_bytes += (SPI_HEADER_SIZE + padding);
 
-	if (spi_info.state == eSPI_STATE_POWERUP)
+    // The magic number that resides at the end of the TX/RX buffer (1 byte after the allocated size)
+    // for the purpose of detection of the overrun. If the magic number is overriten - buffer overrun 
+    // occurred - and we will stuck here forever!
+	if (wlan_tx_buffer[CC3000_TX_BUFFER_SIZE - 1] != CC3000_BUFFER_MAGIC_NUMBER)
 	{
-		while (spi_info.state != eSPI_STATE_INITIALIZED);
+		while(1);
 	}
-
-	if (spi_info.state == eSPI_STATE_INITIALIZED)
+    
+	if (spi_info.state == eSPI_STATE_POWERUP)
 	{
 		// Power up, IRQ is down - send read buffer size command
 		spi_first_write(user_buffer, num_bytes);

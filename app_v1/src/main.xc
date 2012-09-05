@@ -22,6 +22,7 @@
 
 #include "wifi_spi.h"
 #include "spi_master.h"
+#include "spi_tiwisl.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -41,9 +42,9 @@ on stdcore[0]: spi_master_interface spi_if =
 
 on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
 {
-    XS1_PORT_1P, // nCS
-    XS1_PORT_1N, // nIRQ
-    XS1_PORT_1K  // Wifi power enable
+  XS1_PORT_1P, // nCS
+  XS1_PORT_1N, // nIRQ
+  XS1_PORT_1K  // Wifi power enable
 };
 
 /*---------------------------------------------------------------------------

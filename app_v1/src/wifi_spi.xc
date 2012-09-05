@@ -20,8 +20,8 @@
 #include <xs1.h>
 #include <print.h>
 #include "wifi_spi.h"
-#include "spi_conf.h"
 #include "spi_handler.h"
+#include "wifi_init.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -57,11 +57,11 @@ void t_wifi(chanend c_wifi_app, in port p_spi_irq)
     timer t;
     unsigned time;
 
-    spih_open();
+    wifi_spi_init();
 
     t :> time;
     time += TIME_UNSOLICITED_COMMAND_HANDLE;
-
+#if 0
     while(1)
     {
         select
@@ -75,7 +75,7 @@ void t_wifi(chanend c_wifi_app, in port p_spi_irq)
 
             case t when timerafter(time) :> void:
             {
-                // hci_unsolicited_command_handle();
+                //hci_unsolicited_event_handler();
                 time += TIME_UNSOLICITED_COMMAND_HANDLE;
                 break;
             } // case t when timerafter(time) :> void:
@@ -83,13 +83,14 @@ void t_wifi(chanend c_wifi_app, in port p_spi_irq)
             /*
             case c_wifi_app :> int x:
             {
-                application_specific( outside_module );
+                application_specific();
                 break;
             }
             */
 
         } // select
     } // while(1)
+#endif
 }
 
 /*---------------------------------------------------------------------------

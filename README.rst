@@ -1,5 +1,5 @@
-<title>
-.......
+Wi-Fi
+.....
 
 :Stable release:  0.1
 
@@ -42,4 +42,4 @@ Required Repositories
 Support
 =======
 
-<Description of support model>
+* Raise issues via GitHub or a RT Ticket.

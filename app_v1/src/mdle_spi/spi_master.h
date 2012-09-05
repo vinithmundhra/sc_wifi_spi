@@ -38,13 +38,6 @@ typedef struct spi_master_interface
     in buffered port:8 miso;
 } spi_master_interface;
 
-typedef struct spi_tiwisl_ctrl_t_
-{
-    out port p_spi_cs;
-    in port p_spi_irq;
-    out port p_pwr_en;
-} spi_tiwisl_ctrl_t;
-
 #ifdef __spi_conf_h_exists__
 #include "spi_conf.h"
 #endif
