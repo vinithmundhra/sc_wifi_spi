@@ -14,13 +14,12 @@
 
  ===========================================================================*/
 
-#ifndef _spi_handler_h_
-#define _spi_handler_h_
+#ifndef _netapp_h_
+#define _netapp_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
-#include <xccompat.h>
 
 /*---------------------------------------------------------------------------
  constants
@@ -37,7 +36,6 @@
 /*---------------------------------------------------------------------------
  extern variables
  ---------------------------------------------------------------------------*/
-extern unsigned char wlan_tx_buffer[];
 
 /*---------------------------------------------------------------------------
  prototypes
@@ -51,7 +49,6 @@ extern unsigned char wlan_tx_buffer[];
  *  \param yyy    description of yyy
  *  \return None
  **/
-void spih_open();
 
 /*==========================================================================*/
 /**
@@ -61,28 +58,6 @@ void spih_open();
  *  \param yyy    description of yyy
  *  \return None
  **/
-void spih_close();
 
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
-void spih_write(REFERENCE_PARAM(unsigned char, user_buffer),
-                unsigned short num_bytes);
-
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
-void spih_irq_handler();
-
-#endif // _spi_handler_h_
+#endif // _netapp_h_
 /*==========================================================================*/

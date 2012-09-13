@@ -17,17 +17,10 @@
 /*---------------------------------------------------------------------------
  include files
  ---------------------------------------------------------------------------*/
-#include <xs1.h>
-#include <print.h>
-#include "wifi_spi.h"
-#include "spi_handler.h"
-#include "wifi_init.h"
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
-// Handle unsolicited commands every 500 ms
-#define TIME_UNSOLICITED_COMMAND_HANDLE   50000000
 
 /*---------------------------------------------------------------------------
  ports and clocks
@@ -50,48 +43,8 @@
  ---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
- t_wifi
+ implementation1
  ---------------------------------------------------------------------------*/
-void t_wifi(chanend c_wifi_app, in port p_spi_irq)
-{
-    timer t;
-    unsigned time;
-
-    wifi_spi_init();
-
-    t :> time;
-    time += TIME_UNSOLICITED_COMMAND_HANDLE;
-#if 0
-    while(1)
-    {
-        select
-        {
-            case p_spi_irq when pinseq(0) :> void:
-            {
-                printstrln("IRQ Low");
-                spih_irq_handler();
-                break;
-            } // case p_spi_irq when pinseq(0) :> void:
-
-            case t when timerafter(time) :> void:
-            {
-                //hci_unsolicited_event_handler();
-                time += TIME_UNSOLICITED_COMMAND_HANDLE;
-                break;
-            } // case t when timerafter(time) :> void:
-
-            /*
-            case c_wifi_app :> int x:
-            {
-                application_specific();
-                break;
-            }
-            */
-
-        } // select
-    } // while(1)
-#endif
-}
 
 /*---------------------------------------------------------------------------
  implementation2

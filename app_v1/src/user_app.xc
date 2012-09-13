@@ -17,11 +17,16 @@
 /*---------------------------------------------------------------------------
  include files
  ---------------------------------------------------------------------------*/
-#include <platform.h>
-#include <xs1.h>
-
-#include "wifi_spi_manager.h"
 #include "user_app.h"
+#include "wlan.h"
+#include "string.h"
+
+#define ENABLE_XSCOPE 0
+
+#if ENABLE_XSCOPE == 1
+#include <print.h>
+#include <xscope.h>
+#endif
 
 /*---------------------------------------------------------------------------
  constants
@@ -30,21 +35,6 @@
 /*---------------------------------------------------------------------------
  ports and clocks
  ---------------------------------------------------------------------------*/
-on stdcore[0]: spi_master_interface spi_if =
-{
-  XS1_CLKBLK_1,
-  XS1_CLKBLK_2,
-  XS1_PORT_1L, // MOSI
-  XS1_PORT_1M, // CLK
-  XS1_PORT_1O, // MISO
-};
-
-on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
-{
-  XS1_PORT_1P, // nCS
-  XS1_PORT_1N, // nIRQ
-  XS1_PORT_1K  // Wifi power enable
-};
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -57,6 +47,10 @@ on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
 /*---------------------------------------------------------------------------
  static variables
  ---------------------------------------------------------------------------*/
+/*
+static char my_ssid[] = "XMOS Chennai";
+static char my_key[] = "xmos0115";
+*/
 
 /*---------------------------------------------------------------------------
  static prototypes
@@ -65,17 +59,38 @@ on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
 /*---------------------------------------------------------------------------
  implementation1
  ---------------------------------------------------------------------------*/
-int main(void)
+void user_app(chanend c_wifi)
 {
-    chan c_wifi;
+    int temp_val;
 
-    par
+#if ENABLE_XSCOPE == 1
+    xscope_register(0, 0, "", 0, "");
+    xscope_config_io(XSCOPE_IO_BASIC);
+#endif
+
+    // wait for wifi_spi power up
+    c_wifi :> int _;
+
+    // start wlan
+    wlan_start(c_wifi);
+
+
+    // Initialize Wi-Fi module
+    // User may send params such as SSID, Key, etc...
+    /*
+    wlan_start(0);
+    wlan_disconnect();
+    wlan_set_connection_policy(0, 0, 0);
+    wlan_connect(WLAN_SEC_WPA2, ssid, my_ssid_len, 0, key, my_key_len);
+    wlan_set_event_mask(HCI_EVNT_WLAN_KEEPALIVE     |
+                            HCI_EVNT_WLAN_UNSOL_INIT    |
+                            HCI_EVNT_WLAN_UNSOL_DHCP    |
+                            HCI_EVNT_WLAN_ASYNC_PING_REPORT);
+    */
+
+    while(1)
     {
-        on stdcore[0]: wifi_spi_manager(c_wifi, spi_if, spi_tiwisl_ctrl);
-        on stdcore[0]: user_app(c_wifi);
-    }
-
-    return 0;
+    } // while(1)
 }
 
 /*==========================================================================*/

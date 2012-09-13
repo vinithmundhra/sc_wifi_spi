@@ -17,11 +17,7 @@
 /*---------------------------------------------------------------------------
  include files
  ---------------------------------------------------------------------------*/
-#include <platform.h>
-#include <xs1.h>
-
-#include "wifi_spi_manager.h"
-#include "user_app.h"
+#include "hci_helper.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -30,21 +26,6 @@
 /*---------------------------------------------------------------------------
  ports and clocks
  ---------------------------------------------------------------------------*/
-on stdcore[0]: spi_master_interface spi_if =
-{
-  XS1_CLKBLK_1,
-  XS1_CLKBLK_2,
-  XS1_PORT_1L, // MOSI
-  XS1_PORT_1M, // CLK
-  XS1_PORT_1O, // MISO
-};
-
-on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
-{
-  XS1_PORT_1P, // nCS
-  XS1_PORT_1N, // nIRQ
-  XS1_PORT_1K  // Wifi power enable
-};
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -63,19 +44,50 @@ on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
  ---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
- implementation1
+ short_to_stream
  ---------------------------------------------------------------------------*/
-int main(void)
+void short_to_stream(unsigned char b[], unsigned short o, unsigned short v)
 {
-    chan c_wifi;
+    b[o] = (unsigned char)(v);
+    b[o+1] = (unsigned char)(v >> 8);
+}
 
-    par
+/*---------------------------------------------------------------------------
+ int_to_stream
+ ---------------------------------------------------------------------------*/
+void int_to_stream(unsigned char b[], unsigned short o, unsigned int v)
+{
+    b[o] = (unsigned char)(v);
+    b[o+1] = (unsigned char)(v >> 8);
+    b[o+2] = (unsigned char)(v >> 16);
+    b[o+3] = (unsigned char)(v >> 24);
+}
+
+/*---------------------------------------------------------------------------
+ stream_to_short
+ ---------------------------------------------------------------------------*/
+unsigned short stream_to_short(unsigned char b[], unsigned short o)
+{
+    return (unsigned short)((unsigned short)((unsigned short)(b[o + 1]) << 8) + (unsigned short)(b[o]));
+}
+
+/*---------------------------------------------------------------------------
+ stream_to_int
+ ---------------------------------------------------------------------------*/
+unsigned int stream_to_int(unsigned char b[], unsigned short o)
+{
+    return (unsigned int)((unsigned int)((unsigned int)(b[o + 3]) << 24) + (unsigned int)((unsigned int)(b[o + 2]) << 16) + (unsigned int)((unsigned int)(b[o + 1]) << 8) + (unsigned int)(b[o]));
+}
+
+/*---------------------------------------------------------------------------
+ array_to_stream
+ ---------------------------------------------------------------------------*/
+void array_to_stream(unsigned char b[], char a[], unsigned short o, unsigned short l)
+{
+    for(int i = 0; i < l; i++)
     {
-        on stdcore[0]: wifi_spi_manager(c_wifi, spi_if, spi_tiwisl_ctrl);
-        on stdcore[0]: user_app(c_wifi);
+        b[o + i] = a[i];
     }
-
-    return 0;
 }
 
 /*==========================================================================*/

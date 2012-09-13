@@ -24,6 +24,7 @@
  constants
  ---------------------------------------------------------------------------*/
 #define DELAY_FIRST_WRITE   5000 // 50us delay for first write
+#define READ                3
 
 /*---------------------------------------------------------------------------
  ports and clocks
@@ -36,12 +37,11 @@
 /*---------------------------------------------------------------------------
  global variables
  ---------------------------------------------------------------------------*/
-extern spi_master_interface spi_if;
-extern spi_tiwisl_ctrl_t    spi_tiwisl_ctrl;
 
 /*---------------------------------------------------------------------------
  static variables
  ---------------------------------------------------------------------------*/
+unsigned char spi_read_header[] = {READ, 0, 0, 0};
 
 /*---------------------------------------------------------------------------
  static prototypes
@@ -50,10 +50,28 @@ extern spi_tiwisl_ctrl_t    spi_tiwisl_ctrl;
 /*---------------------------------------------------------------------------
  spi_init
  ---------------------------------------------------------------------------*/
-void spi_init()
+void spi_tiwisl_init(spi_master_interface &spi_if,
+                     spi_tiwisl_ctrl_t &spi_tiwisl_ctrl)
 {
+    unsigned irq_val;
+
+    // Read the interrupt pin
+    spi_tiwisl_ctrl.p_spi_irq :> irq_val;
+
     // Enable Wi-Fi power
     spi_tiwisl_ctrl.p_pwr_en <: 1;
+
+    if(irq_val)
+    {
+        // Wait for IRQ to be low
+        spi_tiwisl_ctrl.p_spi_irq when pinseq(0) :> void;
+    }
+    else
+    {
+        // Wait for IRQ to be High and then low
+        spi_tiwisl_ctrl.p_spi_irq when pinseq(1) :> void;
+        spi_tiwisl_ctrl.p_spi_irq when pinseq(0) :> void;
+    }
 
     // Init SPI
     spi_master_init(spi_if, DEFAULT_SPI_CLOCK_DIV);
@@ -62,7 +80,8 @@ void spi_init()
 /*---------------------------------------------------------------------------
  spi_shutdown
  ---------------------------------------------------------------------------*/
-void spi_shutdown()
+void spi_shutdown(spi_master_interface &spi_if,
+                  spi_tiwisl_ctrl_t &spi_tiwisl_ctrl)
 {
     // Disable Wi-Fi power
     spi_tiwisl_ctrl.p_pwr_en <: 0;
@@ -74,13 +93,19 @@ void spi_shutdown()
 /*---------------------------------------------------------------------------
  spi_master_read
  ---------------------------------------------------------------------------*/
-void spi_read(unsigned char buffer[], unsigned short num_bytes)
+void spi_read(spi_master_interface &spi_if,
+              spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
+              unsigned char buffer[],
+              unsigned short num_bytes)
 {
     // Wait for IRQ to be low
     spi_tiwisl_ctrl.p_spi_irq when pinseq(0) :> void;
 
     // Assert CS
     spi_tiwisl_ctrl.p_spi_cs <: 0;
+
+    // Issue the read command
+    spi_master_out_buffer(spi_if, spi_read_header, 3);
 
     // Read the SPI data from device
     spi_master_in_buffer(spi_if, buffer, num_bytes);
@@ -89,13 +114,16 @@ void spi_read(unsigned char buffer[], unsigned short num_bytes)
     spi_tiwisl_ctrl.p_spi_cs <: 1;
 
     // wait for IRQ to be high
-    spi_tiwisl_ctrl.p_spi_irq when pinseq(1) :> void;
+    //spi_tiwisl_ctrl.p_spi_irq when pinseq(1) :> void;
 }
 
 /*---------------------------------------------------------------------------
  spi_master_first_write
  ---------------------------------------------------------------------------*/
-void spi_first_write(unsigned char buffer[], unsigned short num_bytes)
+void spi_first_write(spi_master_interface &spi_if,
+                     spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
+                     unsigned char buffer[],
+                     unsigned short num_bytes)
 {
     timer t;
     unsigned time;
@@ -127,12 +155,18 @@ void spi_first_write(unsigned char buffer[], unsigned short num_bytes)
 
     // Deassert nCS
     spi_tiwisl_ctrl.p_spi_cs <: 1;
+
+    // wait for IRQ to be HI
+    spi_tiwisl_ctrl.p_spi_irq when pinseq(1) :> void;
 }
 
 /*---------------------------------------------------------------------------
  spi_master_write
  ---------------------------------------------------------------------------*/
-void spi_write(unsigned char buffer[], unsigned short num_bytes)
+void spi_write(spi_master_interface &spi_if,
+               spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
+               unsigned char buffer[],
+               unsigned short num_bytes)
 {
     // Assert nCS
     spi_tiwisl_ctrl.p_spi_cs <: 0;
