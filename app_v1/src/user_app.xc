@@ -61,7 +61,7 @@ static char my_key[] = "xmos0115";
  ---------------------------------------------------------------------------*/
 void user_app(chanend c_wifi)
 {
-    int temp_val;
+    //int temp_val;
 
 #if ENABLE_XSCOPE == 1
     xscope_register(0, 0, "", 0, "");

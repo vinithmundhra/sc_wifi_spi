@@ -31,7 +31,6 @@
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
-#define SPI_BUFFER_SIZE     1000
 #define HEADERS_SIZE_EVNT   (SPI_HEADER_SIZE + 5)
 
 /*---------------------------------------------------------------------------
@@ -45,7 +44,7 @@
 /*---------------------------------------------------------------------------
  global variables
  ---------------------------------------------------------------------------*/
-char spi_buffer[SPI_BUFFER_SIZE];
+char spi_buffer[WLAN_TX_BUFFER_SIZE];
 
 /*---------------------------------------------------------------------------
  static variables
@@ -64,7 +63,7 @@ void wifi_spi_manager(chanend c_wifi,
 {
     int length;
     int power_up = 1;
-    int temp_rtn = 1;
+    int temp_rtn;
 
     unsigned short spi_read_len;
     unsigned char  type;
@@ -101,6 +100,7 @@ void wifi_spi_manager(chanend c_wifi,
                 type = spi_buffer[SPI_HEADER_SIZE + HCI_PACKET_TYPE_OFFSET];
 
                 // send result
+                temp_rtn = 0;
                 c_wifi <: temp_rtn;
 
                 /*

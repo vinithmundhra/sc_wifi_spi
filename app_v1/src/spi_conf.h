@@ -29,13 +29,13 @@
  *                     = (100 MHz)/(2 * 4)
  *                     = 12.5 MHz
  * */
-//#define DEFAULT_SPI_CLOCK_DIV 4
+#define DEFAULT_SPI_CLOCK_DIV 4
 
 /*
  * SPI Master Mode = 0
  * CPHA 0; CPOL 0
  */
-//#define SPI_MASTER_MODE 0
+#define SPI_MASTER_MODE 0
 
 /*---------------------------------------------------------------------------
  typedefs

@@ -24,6 +24,7 @@
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+#define WLAN_TX_BUFFER_SIZE                             1520
 #define SPI_HEADER_SIZE                                 (5)
 #define SIMPLE_LINK_HCI_CMND_HEADER_SIZE                (4)
 #define HEADERS_SIZE_CMD                                (SPI_HEADER_SIZE + SIMPLE_LINK_HCI_CMND_HEADER_SIZE)

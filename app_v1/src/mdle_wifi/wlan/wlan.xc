@@ -21,6 +21,7 @@
 #include "hci.h"
 #include "wifi_conf_defines.h"
 #include "hci_helper.h"
+#include <print.h>
 
 /*---------------------------------------------------------------------------
  constants
@@ -76,29 +77,26 @@
  ---------------------------------------------------------------------------*/
 void wlan_start(chanend c_wifi)
 {
-    // todo common buffer?
-    unsigned char buffer[20];
+    // fill api wlan_tx_buf
+    wlan_tx_buf[HEADERS_SIZE_CMD] = 1;
 
-    // fill api buffer
-    buffer[HEADERS_SIZE_CMD] = 1;
-
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_SIMPLE_LINK_START,
             WLAN_SL_INIT_START_PARAMS_LEN);
 
     // get result
-    c_wifi :> int _;
+    c_wifi :> int _; printstrln("cmd sent");
 
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_READ_BUFFER_SIZE,
             0);
 
     // get result
-    c_wifi :> int _;
+    c_wifi :> int _; printstrln("cmd sent");
 }
 
 /*---------------------------------------------------------------------------
@@ -113,29 +111,28 @@ void wlan_connect(chanend c_wifi,
                   long key_len)
 {
     int temp_l;
-    unsigned char buffer[100];
     unsigned char bssid_zero[] = {0, 0, 0, 0, 0, 0};
 
     // 32 bit to char
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 0), 0x0000001c);
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 4), ssid_len);
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 8), sec_type);
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 12), (0x00000010 + ssid_len));
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 16), key_len);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), 0x0000001c);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 4), ssid_len);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 8), sec_type);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 12), (0x00000010 + ssid_len));
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 16), key_len);
     // 16 bit 0
-    short_to_stream(buffer, (HEADERS_SIZE_CMD + 20), 0);
+    short_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 20), 0);
     // array to chararray
-    array_to_stream(buffer, bssid_zero, (HEADERS_SIZE_CMD + 22), ETH_ALEN);
+    array_to_stream(wlan_tx_buf, bssid_zero, (HEADERS_SIZE_CMD + 22), ETH_ALEN);
     temp_l = HEADERS_SIZE_CMD + 22 + ETH_ALEN;
 
-    array_to_stream(buffer, ssid, temp_l, ssid_len);
+    array_to_stream(wlan_tx_buf, ssid, temp_l, ssid_len);
     temp_l += ssid_len;
 
-    array_to_stream(buffer, key, temp_l, key_len);
+    array_to_stream(wlan_tx_buf, key, temp_l, key_len);
 
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_CONNECT,
             (WLAN_CONNECT_PARAM_LEN + ssid_len + key_len - 1));
 
@@ -149,11 +146,9 @@ void wlan_connect(chanend c_wifi,
  ---------------------------------------------------------------------------*/
 void wlan_disconnect(chanend c_wifi)
 {
-    unsigned char buffer[20];
-
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_DISCONNECT,
             0);
 
@@ -169,16 +164,14 @@ void wlan_set_connection_policy(chanend c_wifi,
                                 unsigned long should_use_fast_connect,
                                 unsigned long use_profiles)
 {
-    unsigned char buffer[100];
-
     // 32 bit to char
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 0), should_connect_to_open_ap);
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 4), should_use_fast_connect);
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 8), use_profiles);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), should_connect_to_open_ap);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 4), should_use_fast_connect);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 8), use_profiles);
 
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_SET_CONNECTION_POLICY,
             WLAN_SET_CONNECTION_POLICY_PARAMS_LEN);
 
@@ -205,9 +198,8 @@ void wlan_add_profile(chanend c_wifi,
     unsigned char bssid_zero[] = {0, 0, 0, 0, 0, 0};
     int i = 0;
     int index = HEADERS_SIZE_CMD;
-    unsigned char buffer[200];
 
-    int_to_stream(buffer, index, sec_type); index += 4;
+    int_to_stream(wlan_tx_buf, index, sec_type); index += 4;
 
 	// Setup arguments in accordence with the security type
 
@@ -216,13 +208,13 @@ void wlan_add_profile(chanend c_wifi,
 		//None
 	    case WLAN_SEC_UNSEC:
 	    {
-            int_to_stream(buffer, index, 0x00000014); index += 4;
-			int_to_stream(buffer, index, ssid_len); index += 4;
-			short_to_stream(buffer, index, 0); index += 2;
-            array_to_stream(buffer, bssid_zero, index, ETH_ALEN); index += ETH_ALEN;
+            int_to_stream(wlan_tx_buf, index, 0x00000014); index += 4;
+			int_to_stream(wlan_tx_buf, index, ssid_len); index += 4;
+			short_to_stream(wlan_tx_buf, index, 0); index += 2;
+            array_to_stream(wlan_tx_buf, bssid_zero, index, ETH_ALEN); index += ETH_ALEN;
 
-            int_to_stream(buffer, index, priority); index += 4;
-            array_to_stream(buffer, ssid, index, ssid_len); index += ssid_len;
+            int_to_stream(wlan_tx_buf, index, priority); index += 4;
+            array_to_stream(wlan_tx_buf, ssid, index, ssid_len); index += ssid_len;
 
 	        arg_len = WLAN_ADD_PROFILE_NOSEC_PARAM_LEN + ssid_len;
 	    }
@@ -232,25 +224,25 @@ void wlan_add_profile(chanend c_wifi,
 	    case WLAN_SEC_WEP:
 	    {
 
-            int_to_stream(buffer, index, 0x00000020); index += 4;
-			int_to_stream(buffer, index, ssid_len); index += 4;
-			short_to_stream(buffer, index, 0); index += 2;
-            array_to_stream(buffer, bssid_zero, index, ETH_ALEN); index += ETH_ALEN;
+            int_to_stream(wlan_tx_buf, index, 0x00000020); index += 4;
+			int_to_stream(wlan_tx_buf, index, ssid_len); index += 4;
+			short_to_stream(wlan_tx_buf, index, 0); index += 2;
+            array_to_stream(wlan_tx_buf, bssid_zero, index, ETH_ALEN); index += ETH_ALEN;
 
-            int_to_stream(buffer, index, priority); index += 4;
-			int_to_stream(buffer, index, (0x0000000C + ssid_len)); index += 4;
+            int_to_stream(wlan_tx_buf, index, priority); index += 4;
+			int_to_stream(wlan_tx_buf, index, (0x0000000C + ssid_len)); index += 4;
 
-            int_to_stream(buffer, index, pairwisecipher_or_txkeylen); index += 4;
-            int_to_stream(buffer, index, groupcipher_txkeyindex); index += 4;
+            int_to_stream(wlan_tx_buf, index, pairwisecipher_or_txkeylen); index += 4;
+            int_to_stream(wlan_tx_buf, index, groupcipher_txkeyindex); index += 4;
 
-			array_to_stream(buffer, ssid, index, ssid_len); index += ssid_len;
+			array_to_stream(wlan_tx_buf, ssid, index, ssid_len); index += ssid_len;
 
 			for(i = 0; i < 4; i++)
 		   	{
             // todo
 		   		unsigned char p = pf_or_key[i * pairwisecipher_or_txkeylen];
 		   		// VINITH TODO
-		   		//array_to_stream(buffer, p, index, pairwisecipher_or_txkeylen); index += 1;
+		   		//array_to_stream(wlan_tx_buf, p, index, pairwisecipher_or_txkeylen); index += 1;
 		   	}
 
 	        arg_len = WLAN_ADD_PROFILE_WEP_PARAM_LEN + ssid_len + pairwisecipher_or_txkeylen * 4;
@@ -263,20 +255,20 @@ void wlan_add_profile(chanend c_wifi,
 	    case WLAN_SEC_WPA:
 	    case WLAN_SEC_WPA2:
 	    {
-            int_to_stream(buffer, index, 0x00000028); index += 4;
-			int_to_stream(buffer, index, ssid_len); index += 4;
-			short_to_stream(buffer, index, 0); index += 2;
-            array_to_stream(buffer, bssid_zero, index, ETH_ALEN); index += ETH_ALEN;
+            int_to_stream(wlan_tx_buf, index, 0x00000028); index += 4;
+			int_to_stream(wlan_tx_buf, index, ssid_len); index += 4;
+			short_to_stream(wlan_tx_buf, index, 0); index += 2;
+            array_to_stream(wlan_tx_buf, bssid_zero, index, ETH_ALEN); index += ETH_ALEN;
 
-            int_to_stream(buffer, index, priority); index += 4;
-            int_to_stream(buffer, index, pairwisecipher_or_txkeylen); index += 4;
-            int_to_stream(buffer, index, groupcipher_txkeyindex); index += 4;
-            int_to_stream(buffer, index, key_mgmt); index += 4;
-            int_to_stream(buffer, index, (0x00000008 + ssid_len)); index += 4;
-            int_to_stream(buffer, index, passphrase_len); index += 4;
+            int_to_stream(wlan_tx_buf, index, priority); index += 4;
+            int_to_stream(wlan_tx_buf, index, pairwisecipher_or_txkeylen); index += 4;
+            int_to_stream(wlan_tx_buf, index, groupcipher_txkeyindex); index += 4;
+            int_to_stream(wlan_tx_buf, index, key_mgmt); index += 4;
+            int_to_stream(wlan_tx_buf, index, (0x00000008 + ssid_len)); index += 4;
+            int_to_stream(wlan_tx_buf, index, passphrase_len); index += 4;
 
-			array_to_stream(buffer, ssid, index, ssid_len); index += ssid_len;
-            array_to_stream(buffer, pf_or_key, index, passphrase_len); index += passphrase_len;
+			array_to_stream(wlan_tx_buf, ssid, index, ssid_len); index += ssid_len;
+            array_to_stream(wlan_tx_buf, pf_or_key, index, passphrase_len); index += passphrase_len;
 
 			arg_len = WLAN_ADD_PROFILE_WPA_PARAM_LEN + ssid_len + passphrase_len;
 	    }
@@ -285,9 +277,9 @@ void wlan_add_profile(chanend c_wifi,
 	}
 
     // Initiate a HCI command
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_ADD_PROFILE,
             arg_len);
 
@@ -300,14 +292,12 @@ void wlan_add_profile(chanend c_wifi,
  ---------------------------------------------------------------------------*/
 void wlan_del_profile(chanend c_wifi, unsigned long index)
 {
-    unsigned char buffer[100];
-
     // 32 bit to char
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 0), index);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), index);
 
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_DEL_PROFILE,
             WLAN_DEL_PROFILE_PARAMS_LEN);
 
@@ -319,13 +309,11 @@ void wlan_del_profile(chanend c_wifi, unsigned long index)
  ---------------------------------------------------------------------------*/
 void wlan_get_scan_results(chanend c_wifi, unsigned long scan_timeout)
 {
-    unsigned char buffer[100];
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), scan_timeout);
 
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 0), scan_timeout);
-
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_GET_SCAN_RESULTS,
             WLAN_GET_SCAN_RESULTS_PARAMS_LEN);
 
@@ -347,23 +335,22 @@ void wlan_set_scan_params(chanend c_wifi,
                           unsigned long default_tx_power,
                           unsigned char interval_list[])
 {
-    unsigned char buffer[100];
     int index = HEADERS_SIZE_CMD;
 
-    int_to_stream(buffer, index, 36); index += 4;
-    int_to_stream(buffer, index, enable); index += 4;
-    int_to_stream(buffer, index, min_dwell_time); index += 4;
-    int_to_stream(buffer, index, max_dwell_time); index += 4;
-    int_to_stream(buffer, index, num_probe_responses); index += 4;
-    int_to_stream(buffer, index, channel_mask); index += 4;
-    int_to_stream(buffer, index, rssi_threshold); index += 4;
-    int_to_stream(buffer, index, snr_threshold); index += 4;
-    int_to_stream(buffer, index, default_tx_power); index += 4;
-    array_to_stream(buffer, interval_list, index, (sizeof(unsigned long) * SL_SET_SCAN_PARAMS_INTERVAL_LIST_SIZE));
+    int_to_stream(wlan_tx_buf, index, 36); index += 4;
+    int_to_stream(wlan_tx_buf, index, enable); index += 4;
+    int_to_stream(wlan_tx_buf, index, min_dwell_time); index += 4;
+    int_to_stream(wlan_tx_buf, index, max_dwell_time); index += 4;
+    int_to_stream(wlan_tx_buf, index, num_probe_responses); index += 4;
+    int_to_stream(wlan_tx_buf, index, channel_mask); index += 4;
+    int_to_stream(wlan_tx_buf, index, rssi_threshold); index += 4;
+    int_to_stream(wlan_tx_buf, index, snr_threshold); index += 4;
+    int_to_stream(wlan_tx_buf, index, default_tx_power); index += 4;
+    array_to_stream(wlan_tx_buf, interval_list, index, (sizeof(unsigned long) * SL_SET_SCAN_PARAMS_INTERVAL_LIST_SIZE));
 
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_SET_SCANPARAM,
             WLAN_SET_SCAN_PARAMS_LEN);
 
@@ -376,14 +363,12 @@ void wlan_set_scan_params(chanend c_wifi,
  ---------------------------------------------------------------------------*/
 void wlan_set_event_mask(chanend c_wifi, unsigned long mask)
 {
-    unsigned char buffer[100];
-
     // 32 bit to char
-    int_to_stream(buffer, (HEADERS_SIZE_CMD + 0), mask);
+    int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), mask);
 
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_EVENT_MASK,
             WLAN_SET_MASK_PARAMS_LEN);
 
@@ -396,11 +381,9 @@ void wlan_set_event_mask(chanend c_wifi, unsigned long mask)
  ---------------------------------------------------------------------------*/
 void wlan_status_get(chanend c_wifi)
 {
-    unsigned char buffer[10];
-
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_STATUSGET,
             0);
 
@@ -413,11 +396,9 @@ void wlan_status_get(chanend c_wifi)
  ---------------------------------------------------------------------------*/
 void wlan_first_time_config_start(chanend c_wifi)
 {
-    unsigned char buffer[10];
-
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_SIMPLE_CONFIG_START,
             0);
 
@@ -430,11 +411,9 @@ void wlan_first_time_config_start(chanend c_wifi)
  ---------------------------------------------------------------------------*/
 void wlan_first_time_config_stop(chanend c_wifi)
 {
-    unsigned char buffer[10];
-
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_SIMPLE_CONFIG_STOP,
             0);
 
@@ -447,13 +426,11 @@ void wlan_first_time_config_stop(chanend c_wifi)
  ---------------------------------------------------------------------------*/
 void wlan_first_time_config_set_prefix(chanend c_wifi, char new_prefix[])
 {
-    unsigned char buffer[10];
-
-    array_to_stream(buffer, new_prefix, HEADERS_SIZE_CMD, SL_SIMPLE_CONFIG_PREFIX_LENGTH); 
+    array_to_stream(wlan_tx_buf, new_prefix, HEADERS_SIZE_CMD, SL_SIMPLE_CONFIG_PREFIX_LENGTH);
     
-    // fill buffer and send command
+    // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
-            buffer,
+            wlan_tx_buf,
             HCI_CMND_WLAN_IOCTL_SIMPLE_CONFIG_SET_PREFIX,
             SL_SIMPLE_CONFIG_PREFIX_LENGTH);
 
