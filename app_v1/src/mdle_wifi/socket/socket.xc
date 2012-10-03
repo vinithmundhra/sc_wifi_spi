@@ -312,7 +312,7 @@ void skt_recv(chanend c_wifi,
               long len,
               long flags)
 {
-    int num_bytes;
+    //int num_bytes;
     //num_bytes = simple_link_recv(c_wifi, sd, buf, len, flags, 0, 0, HCI_CMND_RECV);
 }
 
@@ -340,7 +340,7 @@ void skt_send(chanend c_wifi,
               long len,
               long flags)
 {
-    int num_bytes;
+    //int num_bytes;
     //num_bytes = simple_link_send(c_wifi, sd, buf, len, flags, 0, 0, HCI_CMND_SEND);
 }
 

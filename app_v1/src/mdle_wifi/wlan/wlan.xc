@@ -63,6 +63,7 @@
 /*---------------------------------------------------------------------------
  global variables
  ---------------------------------------------------------------------------*/
+sl_info_t sl_info;
 
 /*---------------------------------------------------------------------------
  static variables
@@ -78,7 +79,7 @@
 void wlan_start(chanend c_wifi)
 {
     // fill api wlan_tx_buf
-    wlan_tx_buf[HEADERS_SIZE_CMD] = 1;
+    wlan_tx_buf[HEADERS_SIZE_CMD] = 0;
 
     // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
@@ -87,7 +88,8 @@ void wlan_start(chanend c_wifi)
             WLAN_SL_INIT_START_PARAMS_LEN);
 
     // get result
-    c_wifi :> int _; printstrln("cmd sent");
+    c_wifi :> int _;
+
 
     // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
@@ -96,7 +98,8 @@ void wlan_start(chanend c_wifi)
             0);
 
     // get result
-    c_wifi :> int _; printstrln("cmd sent");
+    c_wifi :> int _;
+
 }
 
 /*---------------------------------------------------------------------------
@@ -106,7 +109,6 @@ void wlan_connect(chanend c_wifi,
                   unsigned long sec_type,
                   char ssid[],
                   long ssid_len,
-                  unsigned char bssid[],
                   unsigned char key[],
                   long key_len)
 {
@@ -139,6 +141,11 @@ void wlan_connect(chanend c_wifi,
     // get result
     c_wifi :> int _;
 
+    // wait for connect event
+    c_wifi :> int _;
+
+    // wait for dhcp event
+    c_wifi :> int _;
 }
 
 /*---------------------------------------------------------------------------
@@ -404,6 +411,9 @@ void wlan_first_time_config_start(chanend c_wifi)
 
     // get result
     c_wifi :> int _;
+
+    // wait for FTC to finish - event 0x8080
+    c_wifi :> int _;
 }
 
 /*---------------------------------------------------------------------------
@@ -435,6 +445,28 @@ void wlan_first_time_config_set_prefix(chanend c_wifi, char new_prefix[])
             SL_SIMPLE_CONFIG_PREFIX_LENGTH);
 
     // get result
+    c_wifi :> int _;
+}
+
+/*---------------------------------------------------------------------------
+ wifi_spi_start
+ ---------------------------------------------------------------------------*/
+void wifi_spi_start(chanend c_wifi)
+{
+    int length = 1;
+    c_wifi <: length;
+    c_wifi <: (unsigned char)(WIFI_START);
+    c_wifi :> int _;
+}
+
+/*---------------------------------------------------------------------------
+ wifi_spi_stop
+ ---------------------------------------------------------------------------*/
+void wifi_spi_stop(chanend c_wifi)
+{
+    int length = 1;
+    c_wifi <: length;
+    c_wifi <: (unsigned char)(WIFI_STOP);
     c_wifi :> int _;
 }
 

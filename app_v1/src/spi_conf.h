@@ -35,7 +35,7 @@
  * SPI Master Mode = 0
  * CPHA 0; CPOL 0
  */
-#define SPI_MASTER_MODE 0
+#define SPI_MASTER_MODE 1
 
 /*---------------------------------------------------------------------------
  typedefs

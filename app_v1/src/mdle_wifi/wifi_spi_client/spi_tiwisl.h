@@ -24,6 +24,7 @@
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+#define SPI_READ_SIZE 3
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -80,8 +81,20 @@ void spi_shutdown(spi_master_interface &spi_if,
  *  \param num_bytes        Number of bytes to receive
  *
  **/
-void spi_read(spi_master_interface &spi_if, spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
-              unsigned char buffer[], unsigned short num_bytes);
+void spi_read(spi_master_interface &spi_if,
+              spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
+              unsigned char buffer[],
+              unsigned short num_bytes,
+              int bypass_cmd);
+
+/*==========================================================================*/
+/**
+ *  Deassert nCS and wait for nIRQ deassert
+ *
+ *  \param spi_tiwisl_ctrl  Other i/f lines: nCS, nIRQ, PWR_ENABLE
+ *
+ **/
+void spi_deassert_cs(spi_tiwisl_ctrl_t &spi_tiwisl_ctrl);
 
 /*==========================================================================*/
 /**

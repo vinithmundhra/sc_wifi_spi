@@ -18,13 +18,13 @@
  include files
  ---------------------------------------------------------------------------*/
 #include "spi_tiwisl.h"
-#include "spi_master.h"
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
-#define DELAY_FIRST_WRITE   5000 // 50us delay for first write
-#define READ                3
+#define DELAY_FIRST_WRITE   6000 // 50us delay for first write
+#define DELAY_BOOT_TIME     100000000 // 1000ms for boot time
+#define READ            3
 
 /*---------------------------------------------------------------------------
  ports and clocks
@@ -54,13 +54,23 @@ void spi_tiwisl_init(spi_master_interface &spi_if,
                      spi_tiwisl_ctrl_t &spi_tiwisl_ctrl)
 {
     unsigned irq_val;
+    timer t;
+    unsigned time;
 
-    // Read the interrupt pin
-    spi_tiwisl_ctrl.p_spi_irq :> irq_val;
+    // Deassert nCS
+    spi_tiwisl_ctrl.p_spi_cs <: 1;
+
+    // Delay 1000ms - Vcc to Pwr_en time
+    t :> time;
+    t when timerafter(time + DELAY_BOOT_TIME) :> void;
 
     // Enable Wi-Fi power
     spi_tiwisl_ctrl.p_pwr_en <: 1;
 
+    // Read the interrupt pin
+    spi_tiwisl_ctrl.p_spi_irq :> irq_val;
+
+    // this will take atleast 53ms to complete - see datasheet
     if(irq_val)
     {
         // Wait for IRQ to be low
@@ -96,7 +106,8 @@ void spi_shutdown(spi_master_interface &spi_if,
 void spi_read(spi_master_interface &spi_if,
               spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
               unsigned char buffer[],
-              unsigned short num_bytes)
+              unsigned short num_bytes,
+              int bypass_cmd)
 {
     // Wait for IRQ to be low
     spi_tiwisl_ctrl.p_spi_irq when pinseq(0) :> void;
@@ -104,17 +115,26 @@ void spi_read(spi_master_interface &spi_if,
     // Assert CS
     spi_tiwisl_ctrl.p_spi_cs <: 0;
 
-    // Issue the read command
-    spi_master_out_buffer(spi_if, spi_read_header, 3);
+    if(!bypass_cmd)
+    {
+        // Issue the read command
+        spi_master_out_buffer(spi_if, spi_read_header, SPI_READ_SIZE);
+    }
 
     // Read the SPI data from device
     spi_master_in_buffer(spi_if, buffer, num_bytes);
+}
 
+/*---------------------------------------------------------------------------
+ spi_deassert_cs
+ ---------------------------------------------------------------------------*/
+void spi_deassert_cs(spi_tiwisl_ctrl_t &spi_tiwisl_ctrl)
+{
     // Deassert nCS
     spi_tiwisl_ctrl.p_spi_cs <: 1;
 
     // wait for IRQ to be high
-    //spi_tiwisl_ctrl.p_spi_irq when pinseq(1) :> void;
+    spi_tiwisl_ctrl.p_spi_irq when pinseq(1) :> void;
 }
 
 /*---------------------------------------------------------------------------

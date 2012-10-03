@@ -29,6 +29,9 @@
 #define NVMEM_READ_PARAMS_LEN   (12)
 #define NVMEM_WRITE_PARAMS_LEN  (16)
 
+// TODO: Not defined!
+#define MAC_ADDR_LEN            (6)
+
 /*---------------------------------------------------------------------------
  ports and clocks
  ---------------------------------------------------------------------------*/

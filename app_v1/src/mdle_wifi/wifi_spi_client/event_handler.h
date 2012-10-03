@@ -14,21 +14,67 @@
 
  ===========================================================================*/
 
-#ifndef _wifi_spi_manager_h_
-#define _wifi_spi_manager_h_
+#ifndef _event_handler_h_
+#define _event_handler_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
-#include "spi_tiwisl.h"
+#include "socket.h"
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+#define SOCKET_STATUS_ACTIVE            (0)
+#define SOCKET_STATUS_INACTIVE          (1)
+
+/* Init socket_active_status = 'all ones': init all sockets with SOCKET_STATUS_INACTIVE.
+   Will be changed by 'set_socket_active_status' upon 'connect' and 'accept' calls */
+#define SOCKET_STATUS_INIT_VAL          0xFFFF
+
+#define M_IS_VALID_SD(sd)               ((0 <= (sd)) && ((sd) <= 7))
+#define M_IS_VALID_STATUS(status)       (((status) == SOCKET_STATUS_ACTIVE)||((status) == SOCKET_STATUS_INACTIVE))
+
+#define BSD_RECV_FROM_FROMLEN_OFFSET    (4)
+#define BSD_RECV_FROM_FROM_OFFSET       (16)
 
 /*---------------------------------------------------------------------------
  typedefs
  ---------------------------------------------------------------------------*/
+typedef struct bsd_rtn_params_t_
+{
+    long skt_descriptor;
+    long status;
+    skt_addr_t skt_address;
+
+} bsd_rtn_params_t;
+
+typedef struct bsd_read_rtn_params_t_
+{
+    long skt_descriptor;
+    long num_bytes;
+    unsigned long flags;
+} bsd_read_rtn_params_t;
+
+typedef struct bsd_select_rx_param_t_
+{
+    long          status;
+    unsigned long rdfd;
+    unsigned long wrfd;
+    unsigned long exfd;
+} bsd_select_rx_param_t;
+
+typedef struct bsd_get_skt_opt_rtn_params_t_
+{
+    unsigned char opt_value[4];
+    char          status;
+} bsd_get_skt_opt_rtn_params_t;
+
+typedef struct bsd_get_host_by_name_params_t_
+{
+    long rtnval;
+    long op_address;
+} bsd_get_host_by_name_params_t;
 
 /*---------------------------------------------------------------------------
  global variables
@@ -44,15 +90,22 @@
 
 /*==========================================================================*/
 /**
- *  wifi_spi_manager
+ *  Description
  *
  *  \param xxx    description of xxx
  *  \param yyy    description of yyy
  *  \return None
  **/
-void wifi_spi_manager(chanend c_wifi,
-                      spi_master_interface &spi_if,
-                      spi_tiwisl_ctrl_t &spi_tiwisl_ctrl);
+int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len);
 
-#endif // _wifi_spi_manager_h_
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+
+#endif // _event_handler_h_
 /*==========================================================================*/

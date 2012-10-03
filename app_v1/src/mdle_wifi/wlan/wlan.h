@@ -59,21 +59,10 @@ void wlan_start(chanend c_wifi);
  *  \param yyy    description of yyy
  *  \return None
  **/
-void wlan_start(chanend c_wifi);
-
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
 void wlan_connect(chanend c_wifi,
                   unsigned long sec_type,
                   char ssid[],
                   long ssid_len,
-                  unsigned char bssid[],
                   unsigned char key[],
                   long key_len);
 
@@ -208,6 +197,26 @@ void wlan_first_time_config_stop(chanend c_wifi);
  *  \return None
  **/
 void wlan_first_time_config_set_prefix(chanend c_wifi, char new_prefix[]);
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void wifi_spi_start(chanend c_wifi);
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void wifi_spi_stop(chanend c_wifi);
 
 #endif // _wlan_h_
 /*==========================================================================*/

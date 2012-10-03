@@ -24,6 +24,14 @@
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+
+// These constants for first byte of channel data from user app - this coincides
+// with SPI_READ / SPI_WRITE. Hence, be careful defining these values
+#define WIFI_START  10
+#define WIFI_STOP   11
+
+
+
 #define WLAN_TX_BUFFER_SIZE                             1520
 #define SPI_HEADER_SIZE                                 (5)
 #define SIMPLE_LINK_HCI_CMND_HEADER_SIZE                (4)
@@ -156,6 +164,17 @@
 /*---------------------------------------------------------------------------
  typedefs
  ---------------------------------------------------------------------------*/
+typedef struct sl_info_t_
+{
+    signed long    tx_data_error;
+    unsigned short num_free_bufs;
+    unsigned short buf_length;
+    unsigned short buf_size;
+    unsigned short rx_data_pending;
+    unsigned long  num_sent_pkts;
+    unsigned long  num_released_pkts;
+    unsigned char  inform_host_on_tx_complete;
+} sl_info_t;
 
 /*---------------------------------------------------------------------------
  global variables
