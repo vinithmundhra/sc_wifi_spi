@@ -22,6 +22,7 @@
 #include "string.h"
 #include "nvmem.h"
 #include "netapp.h"
+#include "socket.h"
 #include "wifi_conf_defines.h"
 #include <xs1.h>
 
@@ -35,6 +36,7 @@
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+#define APP_BUF_SIZE 50
 
 /*---------------------------------------------------------------------------
  ports and clocks
@@ -53,9 +55,9 @@
  ---------------------------------------------------------------------------*/
 static char my_ssid[] = "xms6testap0";
 static char my_key[] = "";
-static char my_prefix[] = {'x', 'm', 's'};
 
-static char my_data[] = "VINITH_VINITH_VINITH_VINITH_VINITH_VINITH_VINITH_BOOM";
+static char my_data[] = "1111111111222222222233333333334444444444555555555566666666667777777777888888888899999999990000000000";
+int my_skt;
 
 /*---------------------------------------------------------------------------
  static prototypes
@@ -68,13 +70,9 @@ void user_app(chanend c_wifi)
 {
     timer t;
     unsigned time;
-
-    unsigned long mip = 0x00000000;
-    unsigned long msnm = 0x00000000;
-    unsigned long mdg = 0x00000000;
-    unsigned long mdns = 0x00000000;
-
-    netapp_ipconfig_retargs_t ipconfig;
+    skt_addr_t skt_addr;
+    skt_len_t skt_len;
+    unsigned char data_buf[APP_BUF_SIZE];
 
 #if ENABLE_XSCOPE == 1
     xscope_register(0, 0, "", 0, "");
@@ -87,52 +85,48 @@ void user_app(chanend c_wifi)
     // start wlan
     wlan_start(c_wifi);
 
-    // FTC set prefix
-    //wlan_first_time_config_set_prefix(c_wifi, my_prefix);
-
-    // FTC start
-    //wlan_first_time_config_start(c_wifi);
-
-    //netapp_dhcp(c_wifi, mip, msnm, mdg, mdns);
-
     // Set connection policy
     wlan_set_connection_policy(c_wifi, 0, 0, 0);
 
-    // stop module
-    //wifi_spi_stop(c_wifi);
-
-    // wait for some time !!
-    //t :> time;
-    //t when timerafter(time + 10000000) :> void;
-
-    // start module
-    //wifi_spi_start(c_wifi);
-
-    // start wlan
-    //wlan_start(c_wifi);
-
-    // Set the event masks
-    //wlan_set_event_mask(c_wifi, (HCI_EVNT_WLAN_KEEPALIVE | HCI_EVNT_WLAN_UNSOL_INIT | HCI_EVNT_WLAN_UNSOL_DHCP | HCI_EVNT_WLAN_ASYNC_PING_REPORT));
-
-
-
-    // wlan disconnect
-    //wlan_disconnect(c_wifi);
-
-
-    // wait for some time !!
-    t :> time;
-    t when timerafter(time + 100000) :> void;
+    t :> time; t when timerafter(time + 9000000) :> void;
 
     // Connect!
-    printstrln("connecting.....");
     wlan_connect(c_wifi, 0, my_ssid, strlen(my_ssid), my_key, strlen(my_key));
 
-    printstrln("get ip configuration details: ");
-    netapp_ipconfig(c_wifi, ipconfig);
+    // create socket
+    skt_create(c_wifi, my_skt, AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+
+    printstrln("sending dummy data packet.....");
+    skt_send_to(c_wifi, my_skt, my_data, strlen(my_data), 0, skt_addr, sizeof(skt_addr_t));
+
+
+
+    // Bind
+    skt_addr.sa_family = AF_INET;
+    // the source port = 50000
+    skt_addr.sa_data[0] = 0xC3; // MSB
+    skt_addr.sa_data[1] = 0x50; // LSB
+    // all IP address = 192.168.1.100
+    skt_addr.sa_data[2] = 0xC0; // 192
+    skt_addr.sa_data[3] = 0xA8; // 168
+    skt_addr.sa_data[4] = 0x01; // 1
+    skt_addr.sa_data[5] = 0x64; // 100
+    skt_bind(c_wifi, my_skt, skt_addr, sizeof(skt_addr_t));
+
+    t :> time; t when timerafter(time + 9000000) :> void;
+    t :> time; t when timerafter(time + 9000000) :> void;
+    t :> time; t when timerafter(time + 9000000) :> void;
+    t :> time; t when timerafter(time + 9000000) :> void;
+    t :> time; t when timerafter(time + 9000000) :> void;
+    t :> time; t when timerafter(time + 9000000) :> void;
+
 
     while(1)
     {
+        printstrln("receive data packet.....");
+        skt_recv_from(c_wifi, my_skt, data_buf, APP_BUF_SIZE, 0, skt_addr, skt_len);
+        t :> time; t when timerafter(time + 9000000) :> void;
     } // while(1)
 }
 

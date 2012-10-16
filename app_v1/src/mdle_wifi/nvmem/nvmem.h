@@ -86,9 +86,9 @@
  *
  */
 void nvmem_read(chanend c_wifi,
-                unsigned long file_id,
-                unsigned long length,
-                unsigned long offset,
+                unsigned int file_id,
+                unsigned int length,
+                unsigned int offset,
                 unsigned char buf[]);
 
 /*==========================================================================*/
@@ -151,8 +151,8 @@ void nvmem_get_mac_address(chanend c_wifi, unsigned char mac[]);
  *
  */
 void nvmem_write_patch(chanend c_wifi,
-                       unsigned long file_id,
-                       unsigned long length,
+                       unsigned int file_id,
+                       unsigned int length,
                        unsigned char sp_data[]);
 
 /*==========================================================================*/

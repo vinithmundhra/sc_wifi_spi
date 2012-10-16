@@ -78,16 +78,16 @@
 
 //Use in case of Big Endian only
 
-#define htonl(A)    ((((unsigned long)(A) & 0xff000000) >> 24) | \
-                     (((unsigned long)(A) & 0x00ff0000) >> 8) | \
-                     (((unsigned long)(A) & 0x0000ff00) << 8) | \
-                     (((unsigned long)(A) & 0x000000ff) << 24))
+#define htonl(A)    ((((unsigned int)(A) & 0xff000000) >> 24) | \
+                     (((unsigned int)(A) & 0x00ff0000) >> 8) | \
+                     (((unsigned int)(A) & 0x0000ff00) << 8) | \
+                     (((unsigned int)(A) & 0x000000ff) << 24))
 
 #define ntohl       htonl
 
 //Use in case of Big Endian only
-#define htons(A)    ((((unsigned long)(A) & 0xff00) >> 8) | \
-                     (((unsigned long)(A) & 0x00ff) << 8))
+#define htons(A)    ((((unsigned int)(A) & 0xff00) >> 8) | \
+                     (((unsigned int)(A) & 0x00ff) << 8))
 
 
 #define ntohs       htons
@@ -97,13 +97,13 @@
  ---------------------------------------------------------------------------*/
 typedef struct in_addr_t_
 {
-    unsigned long s_addr;                   // load with inet_aton()
+    unsigned int s_addr;                   // load with inet_aton()
 } in_addr_t;
 
 typedef struct skt_addr_t_
 {
-    unsigned short int sa_family;
-    unsigned char      sa_data[14];
+    unsigned short sa_family;
+    unsigned char  sa_data[14];
 } skt_addr_t;
 
 typedef struct skt_addr_in_t_
@@ -114,10 +114,10 @@ typedef struct skt_addr_in_t_
     char             sin_zero[8];           // zero this if you want to
 } skt_addr_in_t;
 
-typedef unsigned long skt_len_t;
+typedef unsigned int skt_len_t;
 
-// The fd_set member is required to be an array of longs.
-typedef long int __fd_mask;
+// The fd_set member is required to be an array of ints.
+typedef int __fd_mask;
 
 // It's easier to assume 8-bit bytes than to get CHAR_BIT.
 #define __NFDBITS               (8 * sizeof (__fd_mask))
@@ -183,7 +183,7 @@ typedef struct
  * \note
  * \warning
  */
-void skt_create(chanend c_wifi, long domain, long type, long protocol);
+void skt_create(chanend c_wifi, int &my_skt, int domain, int type, int protocol);
 
 /*==========================================================================*/
 /**
@@ -200,7 +200,7 @@ void skt_create(chanend c_wifi, long domain, long type, long protocol);
  * \note
  * \warning
  */
-void skt_close(chanend c_wifi, long sd);
+void skt_close(chanend c_wifi, int sd);
 
 /*==========================================================================*/
 /**
@@ -255,14 +255,14 @@ void skt_close(chanend c_wifi, long sd);
  * \note
  * \warning
  */
-void skt_accept(chanend c_wifi, long sd, skt_addr_t &addr, skt_len_t &addrlen);
+void skt_accept(chanend c_wifi, int sd, skt_addr_t &addr, skt_len_t &addrlen);
 
 /*==========================================================================*/
 /**
  * \brief assign a name to a socket
  *
  * This function gives the socket the local address addr.
- * addr is addrlen bytes long. Traditionally, this is called
+ * addr is addrlen bytes int. Traditionally, this is called
  * When a socket is created with socket, it exists in a name
  * space (address family) but has no name assigned.
  * It is necessary to assign a local address before a SOCK_STREAM
@@ -285,7 +285,7 @@ void skt_accept(chanend c_wifi, long sd, skt_addr_t &addr, skt_len_t &addrlen);
  * \note
  * \warning
  */
-void skt_bind(chanend c_wifi, long sd, skt_addr_t &addr, long addr_len);
+void skt_bind(chanend c_wifi, int sd, skt_addr_t &addr, int addr_len);
 
 /*==========================================================================*/
 /**
@@ -309,7 +309,7 @@ void skt_bind(chanend c_wifi, long sd, skt_addr_t &addr, long addr_len);
  * \note On this version, backlog is not supported
  * \warning
  */
-void skt_listen(chanend c_wifi, long sd, long backlog);
+void skt_listen(chanend c_wifi, int sd, int backlog);
 
 /*==========================================================================*/
 /**
@@ -350,9 +350,9 @@ void skt_listen(chanend c_wifi, long sd, long backlog);
  * \warning
  */
 void skt_connect(chanend c_wifi,
-                 long sd,
+                 int sd,
                  skt_addr_t &addr,
-                 long addr_len);
+                 int addr_len);
 
 #if 0
 /*==========================================================================*/
@@ -397,7 +397,7 @@ void skt_connect(chanend c_wifi,
  * \warning
  */
 void skt_select(chanend c_wifi,
-                long nfds,
+                int nfds,
                 fd_set *readsds,
                 fd_set *writesds,
                 fd_set *exceptsds,
@@ -444,15 +444,15 @@ void skt_select(chanend c_wifi,
  *          - SOL_SOCKET (optname). SOL_SOCKET configures socket level
  *          - SOCKOPT_RECV_TIMEOUT (optname)
  *            SOCKOPT_RECV_TIMEOUT configures recv and recvfrom timeout.
- *            In that case optval should be pointer to unsigned long
+ *            In that case optval should be pointer to unsigned int
  *          - SOCK_NONBLOCK (optname). set socket non-blocking mode is on or off.
  *            SOCK_ON or SOCK_OFF (optval)
  * \warning
  */
 void skt_set_skt_opt(chanend c_wifi,
-                     long sd,
-                     long level,
-                     long optname,
+                     int sd,
+                     int level,
+                     int optname,
                      unsigned char optval[],
                      skt_len_t optlen);
 
@@ -498,14 +498,14 @@ void skt_set_skt_opt(chanend c_wifi,
  *         (level) and SOCKOPT_RECV_TIMEOUT (optname) is
  *         enabled. SOCKOPT_RECV_TIMEOUT configure recv and
  *         recvfrom timeout. In that case optval should be
- *         pointer to unsigned long
+ *         pointer to unsigned int
  *
  * \warning
  */
 void skt_get_skt_opt(chanend c_wifi,
-                     long sd,
-                     long level,
-                     long opt_name,
+                     int sd,
+                     int level,
+                     int opt_name,
                      unsigned char optval[],
                      skt_len_t &opt_len);
 
@@ -532,10 +532,10 @@ void skt_get_skt_opt(chanend c_wifi,
  * \warning
  */
 void skt_recv(chanend c_wifi,
-              long sd,
+              int sd,
               unsigned char buf[],
-              long len,
-              long flags);
+              int len,
+              int flags);
 
 /*==========================================================================*/
 /**
@@ -571,10 +571,10 @@ void skt_recv(chanend c_wifi,
  * \warning
  */
 void skt_recv_from(chanend c_wifi,
-                   long sd,
+                   int sd,
                    unsigned char buf[],
-                   long len,
-                   long flags,
+                   int len,
+                   int flags,
                    skt_addr_t &from,
                    skt_len_t &from_len);
 
@@ -601,10 +601,10 @@ void skt_recv_from(chanend c_wifi,
  * \warning
  */
 void skt_send(chanend c_wifi,
-              long sd,
-              char buf[],
-              long len,
-              long flags);
+              int sd,
+              char data_buf[],
+              int len,
+              int flags);
 
 /*==========================================================================*/
 /**
@@ -638,10 +638,10 @@ void skt_send(chanend c_wifi,
  * \warning
  */
 void skt_send_to(chanend c_wifi,
-                 long sd,
-                 char buf[],
-                 long len,
-                 long flags,
+                 int sd,
+                 char data_buf[],
+                 int len,
+                 int flags,
                  skt_addr_t &to,
                  skt_len_t tolen);
 
@@ -668,7 +668,7 @@ void skt_send_to(chanend c_wifi,
 void skt_get_host_by_name(chanend c_wifi,
                           char hostname[],
                           unsigned short name_len,
-                          unsigned long &out_ip_addr);
+                          unsigned int &out_ip_addr);
 
 #endif // _socket_h_
 /*==========================================================================*/

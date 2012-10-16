@@ -24,6 +24,10 @@
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
+#define      WLAN_SEC_UNSEC (0)
+#define      WLAN_SEC_WEP   (1)
+#define      WLAN_SEC_WPA   (2)
+#define      WLAN_SEC_WPA2  (3)
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -60,11 +64,11 @@ void wlan_start(chanend c_wifi);
  *  \return None
  **/
 void wlan_connect(chanend c_wifi,
-                  unsigned long sec_type,
+                  unsigned int sec_type,
                   char ssid[],
-                  long ssid_len,
+                  int ssid_len,
                   unsigned char key[],
-                  long key_len);
+                  int key_len);
 
 /*==========================================================================*/
 /**
@@ -85,9 +89,9 @@ void wlan_disconnect(chanend c_wifi);
  *  \return None
  **/
 void wlan_set_connection_policy(chanend c_wifi,
-                                unsigned long should_connect_to_open_ap,
-                                unsigned long should_use_fast_connect,
-                                unsigned long use_profiles);
+                                unsigned int should_connect_to_open_ap,
+                                unsigned int should_use_fast_connect,
+                                unsigned int use_profiles);
 
 /*==========================================================================*/
 /**
@@ -98,16 +102,16 @@ void wlan_set_connection_policy(chanend c_wifi,
  *  \return None
  **/
 void wlan_add_profile(chanend c_wifi,
-                      unsigned long sec_type,
+                      unsigned int sec_type,
 					  unsigned char ssid[],
-					  unsigned long ssid_len,
+					  unsigned int ssid_len,
 					  unsigned char bssid[],
-                      unsigned long priority,
-                      unsigned long pairwisecipher_or_txkeylen,
-                      unsigned long groupcipher_txkeyindex,
-                      unsigned long key_mgmt,
+                      unsigned int priority,
+                      unsigned int pairwisecipher_or_txkeylen,
+                      unsigned int groupcipher_txkeyindex,
+                      unsigned int key_mgmt,
                       unsigned char pf_or_key[],
-                      unsigned long passphrase_len);
+                      unsigned int passphrase_len);
 
 /*==========================================================================*/
 /**
@@ -117,7 +121,7 @@ void wlan_add_profile(chanend c_wifi,
  *  \param yyy    description of yyy
  *  \return None
  **/
-void wlan_del_profile(chanend c_wifi, unsigned long index);
+void wlan_del_profile(chanend c_wifi, unsigned int index);
 
 /*==========================================================================*/
 /**
@@ -127,7 +131,7 @@ void wlan_del_profile(chanend c_wifi, unsigned long index);
  *  \param yyy    description of yyy
  *  \return None
  **/
-void wlan_get_scan_results(chanend c_wifi, unsigned long scan_timeout);
+void wlan_get_scan_results(chanend c_wifi, unsigned int scan_timeout);
 
 /*==========================================================================*/
 /**
@@ -138,14 +142,14 @@ void wlan_get_scan_results(chanend c_wifi, unsigned long scan_timeout);
  *  \return None
  **/
 void wlan_set_scan_params(chanend c_wifi,
-                          unsigned long enable,
-                          unsigned long min_dwell_time,
-                          unsigned long max_dwell_time,
-                          unsigned long num_probe_responses,
-                          unsigned long channel_mask,
-                          long rssi_threshold,
-                          unsigned long snr_threshold,
-                          unsigned long default_tx_power,
+                          unsigned int enable,
+                          unsigned int min_dwell_time,
+                          unsigned int max_dwell_time,
+                          unsigned int num_probe_responses,
+                          unsigned int channel_mask,
+                          int rssi_threshold,
+                          unsigned int snr_threshold,
+                          unsigned int default_tx_power,
                           unsigned char interval_list[]);
 
 /*==========================================================================*/
@@ -156,7 +160,7 @@ void wlan_set_scan_params(chanend c_wifi,
  *  \param yyy    description of yyy
  *  \return None
  **/
-void wlan_set_event_mask(chanend c_wifi, unsigned long mask);
+void wlan_set_event_mask(chanend c_wifi, unsigned int mask);
 
 /*==========================================================================*/
 /**

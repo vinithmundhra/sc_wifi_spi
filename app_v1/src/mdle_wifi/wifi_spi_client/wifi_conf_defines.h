@@ -25,10 +25,20 @@
  constants
  ---------------------------------------------------------------------------*/
 
+#define ESUCCESS                                        (0)
+#define EFAIL                                           (-1)
+#define EERROR                                          EFAIL
+#define ERROR_SOCKET_INACTIVE                           (-57)
+#define HCI_CC_PAYLOAD_LEN                              (5)
+#define WLAN_ENABLE                                     (1)
+#define WLAN_DISABLE                                    (0)
+#define MAC_ADDR_LEN                                    (6)
+#define SP_PORTION_SIZE                                 (20)
+
 // These constants for first byte of channel data from user app - this coincides
 // with SPI_READ / SPI_WRITE. Hence, be careful defining these values
-#define WIFI_START  10
-#define WIFI_STOP   11
+#define WIFI_START                                      10
+#define WIFI_STOP                                       11
 
 
 
@@ -166,13 +176,13 @@
  ---------------------------------------------------------------------------*/
 typedef struct sl_info_t_
 {
-    signed long    tx_data_error;
+    int            tx_data_error;
     unsigned short num_free_bufs;
     unsigned short buf_length;
     unsigned short buf_size;
     unsigned short rx_data_pending;
-    unsigned long  num_sent_pkts;
-    unsigned long  num_released_pkts;
+    unsigned int   num_sent_pkts;
+    unsigned int   num_released_pkts;
     unsigned char  inform_host_on_tx_complete;
 } sl_info_t;
 

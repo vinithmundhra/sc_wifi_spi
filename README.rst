@@ -38,6 +38,7 @@ Required Repositories
 ================
 
 * xcommon git\@github.com:xcore/xcommon.git
+* sc_spi git://github.com/xcore/sc_spi.git
 
 Support
 =======

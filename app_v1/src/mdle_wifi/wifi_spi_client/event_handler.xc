@@ -92,7 +92,7 @@
  ---------------------------------------------------------------------------*/
 extern sl_info_t sl_info;
 
-unsigned long socket_active_status = SOCKET_STATUS_INIT_VAL;
+unsigned int socket_active_status = SOCKET_STATUS_INIT_VAL;
 
 /*---------------------------------------------------------------------------
  static variables
@@ -101,7 +101,11 @@ unsigned long socket_active_status = SOCKET_STATUS_INIT_VAL;
 /*---------------------------------------------------------------------------
  static prototypes
  ---------------------------------------------------------------------------*/
-int handle_event_unsol(chanend c_wifi, unsigned char buf[]);
+static int handle_event_unsol(chanend c_wifi, unsigned char buf[]);
+
+static void event_unsol_flowcontrol_handler(unsigned char buf[]);
+
+static void update_socket_active_status(char resp_params[]);
 
 /*---------------------------------------------------------------------------
  implementation1
@@ -110,8 +114,6 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
 {
     int event_opcode;
     int index;
-    int arg_size;
-    int length;
     int temp = 0;
 
     if(buf[0] == HCI_TYPE_EVNT)
@@ -122,11 +124,18 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
             // not an unsolicited event
             // a command respose event
             event_opcode = stream_to_short(buf, HCI_EVENT_OPCODE_OFFSET);
-            index = HCI_EVENT_HEADER_SIZE;
+            index = HCI_EVENT_HEADER_SIZE - 2;
 
             switch(event_opcode)
             {
-                case HCI_CMND_READ_BUFFER_SIZE:                         { printstrln("HCI_CMND_READ_BUFFER_SIZE:                   "); c_wifi <: temp; break; }
+                case HCI_CMND_READ_BUFFER_SIZE:
+                {
+                    printstrln("HCI_CMND_READ_BUFFER_SIZE:");
+                    sl_info.num_free_bufs = buf[index];
+                    sl_info.buf_length = stream_to_short(buf, (index + 1));
+                    c_wifi <: temp;
+                    break;
+                }
                 case HCI_CMND_WLAN_CONFIGURE_PATCH:                     { printstrln("HCI_CMND_WLAN_CONFIGURE_PATCH:               "); c_wifi <: temp; break; }
                 case HCI_NETAPP_DHCP:                                   { printstrln("HCI_NETAPP_DHCP:                             "); c_wifi <: temp; break; }
                 case HCI_NETAPP_PING_SEND:                              { printstrln("HCI_NETAPP_PING_SEND:                        "); c_wifi <: temp; break; }
@@ -166,73 +175,155 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
                 case HCI_CMND_WLAN_IOCTL_GET_SCAN_RESULTS:              { printstrln("HCI_CMND_WLAN_IOCTL_GET_SCAN_RESULTS:        "); c_wifi <: temp; break; }
                 case HCI_CMND_SIMPLE_LINK_START:                        { printstrln("HCI_CMND_SIMPLE_LINK_START:                  "); c_wifi <: temp; break; }
                 case HCI_NETAPP_IPCONFIG:                               { printstrln("HCI_NETAPP_IPCONFIG:                         "); c_wifi <: temp; break; }
-                default:                                                { printstrln("Unrecognized event"); break; }
+                default:                                                { printstr("Unrecognized event: Event = "); printintln(event_opcode); break; }
             } // switch(event_opcode)
         } // if(handle_event_unsol(c_wifi, buf) == 1)
     } // if(buf[0] == HCI_TYPE_EVNT)
+    else
+    {
+        printstr("Not an command response event. buf[0] = "); printintln(buf[0]);
+        index = 0;
+    } // else - if(buf[0] == HCI_TYPE_EVNT)
+
+    for(int i = index; i < len; i++)
+    {
+        printint(buf[i]); printstr("  ");
+    }
+    printstrln(""); printstrln("---------------------");
+
     return 0;
 }
 
 /*---------------------------------------------------------------------------
  implementation2
  ---------------------------------------------------------------------------*/
-int handle_event_unsol(chanend c_wifi, unsigned char buf[])
+static int handle_event_unsol(chanend c_wifi, unsigned char buf[])
 {
     int event_opcode = stream_to_short(buf, HCI_EVENT_OPCODE_OFFSET);
     int rtnval = 0;
 
     switch(event_opcode)
     {
-        case HCI_EVNT_WLAN_ASYNC_SIMPLE_CONFIG_DONE:
+        case HCI_EVNT_DATA_UNSOL_FREE_BUFF:
         {
-            printstrln("HCI_EVNT_WLAN_ASYNC_SIMPLE_CONFIG_DONE");
-            c_wifi <: rtnval;
+            printstrln("HCI_EVNT_DATA_UNSOL_FREE_BUFF         ");
+            event_unsol_flowcontrol_handler(buf);
+            if(sl_info.num_released_pkts == sl_info.num_sent_pkts)
+            {
+            }
+            /*c_wifi <: rtnval;*/
             break;
         }
-        case HCI_EVNT_WLAN_KEEPALIVE:
-        {
-            printstrln("HCI_EVNT_WLAN_KEEPALIVE");
-            c_wifi <: rtnval;
-            break;
-        }
-        case HCI_EVNT_WLAN_UNSOL_CONNECT:
-        {
-            printstrln("HCI_EVNT_WLAN_UNSOL_CONNECT");
-            c_wifi <: rtnval;
-            break;
-        }
-        case HCI_EVNT_WLAN_UNSOL_DISCONNECT:
-        {
-            printstrln("HCI_EVNT_WLAN_UNSOL_DISCONNECT");
-            c_wifi <: rtnval;
-            break;
-        }
+        case HCI_EVNT_WLAN_ASYNC_SIMPLE_CONFIG_DONE: { printstrln("HCI_EVNT_WLAN_ASYNC_SIMPLE_CONFIG_DONE"); /*c_wifi <: rtnval;*/ break; }
+        case HCI_EVNT_WLAN_KEEPALIVE:                { printstrln("HCI_EVNT_WLAN_KEEPALIVE               "); /*c_wifi <: rtnval;*/ break; }
+        case HCI_EVNT_WLAN_UNSOL_CONNECT:            { printstrln("HCI_EVNT_WLAN_UNSOL_CONNECT           "); c_wifi <: rtnval; break; }
+        case HCI_EVNT_WLAN_UNSOL_DISCONNECT:         { printstrln("HCI_EVNT_WLAN_UNSOL_DISCONNECT        "); /*c_wifi <: rtnval;*/ break; }
         case HCI_EVNT_WLAN_UNSOL_DHCP:
         {
-            printstrln("HCI_EVNT_WLAN_UNSOL_DHCP");
+            netapp_dhcp_params_t params;
+            int index = HCI_EVENT_HEADER_SIZE;
+            int temp_param;
+
+            temp_param = stream_to_int(buf, (index + NETAPP_IPCONFIG_IP_OFFSET));
+            int_to_stream(params.ip, 0, temp_param);
+            temp_param = stream_to_int(buf, (index + NETAPP_IPCONFIG_SUBNET_OFFSET));
+            int_to_stream(params.subnet_mask, 0, temp_param);
+            temp_param = stream_to_int(buf, (index + NETAPP_IPCONFIG_GW_OFFSET));
+            int_to_stream(params.default_gateway, 0, temp_param);
+            temp_param = stream_to_int(buf, (index + NETAPP_IPCONFIG_DHCP_OFFSET));
+            int_to_stream(params.dhcp_server, 0, temp_param);
+            temp_param = stream_to_int(buf, (index + NETAPP_IPCONFIG_DNS_OFFSET));
+            int_to_stream(params.dns_server, 0, temp_param);
+
+            printstrln("HCI_EVNT_WLAN_UNSOL_DHCP              ");
             c_wifi <: rtnval;
             break;
         }
-        case HCI_EVNT_WLAN_UNSOL_INIT:
+        case HCI_EVNT_WLAN_UNSOL_INIT:               { printstrln("HCI_EVNT_WLAN_UNSOL_INIT              "); /*c_wifi <: rtnval;*/ break; }
+        case HCI_EVNT_WLAN_ASYNC_PING_REPORT:        { printstrln("HCI_EVNT_WLAN_ASYNC_PING_REPORT       "); /*c_wifi <: rtnval;*/ break; }
+        case HCI_EVNT_SEND:
+        case HCI_EVNT_SENDTO:
+        case HCI_EVNT_WRITE:
         {
-            printstrln("HCI_EVNT_WLAN_UNSOL_INIT");
-            c_wifi <: rtnval;
+            // The only synchronous event that can come from SL device in form of command complete is
+            // "Command Complete" on data sent, in case SL device was unable to transmit
+            printstrln("HCI_EVNT_SEND/TO_WRITE");
+            sl_info.tx_data_error = buf[HCI_EVENT_LENGTH_OFFSET];
+            //update_socket_active_status(M_BSD_RESP_PARAMS_OFFSET(buf));
+            c_wifi <: sl_info.tx_data_error;
             break;
         }
-        case HCI_EVNT_WLAN_ASYNC_PING_REPORT:
-        {
-            printstrln("HCI_EVNT_WLAN_ASYNC_PING_REPORT");
-            c_wifi <: rtnval;
-            break;
-        }
-        default:
-        {
-            rtnval = 1;
-            break;
-        }
+
+        default: { rtnval = 1; break; }
+
     } // switch(event_opcode)
 
     return rtnval;
+}
+
+/*---------------------------------------------------------------------------
+ implementation2
+ ---------------------------------------------------------------------------*/
+int get_socket_active_status(int sd)
+{
+    if(M_IS_VALID_SD(sd))
+    {
+        return (socket_active_status & (1 << sd)) ? SOCKET_STATUS_INACTIVE : SOCKET_STATUS_ACTIVE;
+    }
+    return SOCKET_STATUS_INACTIVE;
+}
+
+/*---------------------------------------------------------------------------
+ implementation2
+ ---------------------------------------------------------------------------*/
+void set_socket_active_status(int sd, int status)
+{
+    if(M_IS_VALID_SD(sd) && M_IS_VALID_STATUS(status))
+    {
+        socket_active_status &= ~(1 << sd);      /* clean socket's mask */
+        socket_active_status |= (status << sd); /* set new socket's mask */
+    }
+}
+
+/*---------------------------------------------------------------------------
+ implementation2
+ ---------------------------------------------------------------------------*/
+static void update_socket_active_status(char resp_params[])
+{
+    int status, sd;
+
+    sd = stream_to_int(resp_params, BSD_RSP_PARAMS_SOCKET_OFFSET);
+    status = stream_to_int(resp_params, BSD_RSP_PARAMS_STATUS_OFFSET);
+
+    if(ERROR_SOCKET_INACTIVE == status)
+    {
+        set_socket_active_status(sd, SOCKET_STATUS_INACTIVE);
+    }
+}
+
+/*---------------------------------------------------------------------------
+ implementation2
+ ---------------------------------------------------------------------------*/
+static void event_unsol_flowcontrol_handler(unsigned char buf[])
+{
+    int temp, value, i;
+    unsigned short num_handles = 0;
+    int index;
+
+    num_handles = stream_to_short(buf, HCI_EVENT_HEADER_SIZE);
+    index = HCI_EVENT_HEADER_SIZE + sizeof(num_handles);
+
+    temp = 0;
+
+    for(i = 0; i < num_handles; i++)
+    {
+        value = stream_to_short(buf, (index + FLOW_CONTROL_EVENT_FREE_BUFFS_OFFSET));
+        temp += value;
+        index += FLOW_CONTROL_EVENT_SIZE;
+    }
+
+    sl_info.num_free_bufs += temp;
+    sl_info.num_released_pkts += temp;
 }
 
 /*==========================================================================*/

@@ -79,13 +79,13 @@
  * \warning
  *
  */
-signed long nvmem_write(chanend c_wifi,
-                        unsigned long file_id,
-                        unsigned long length,
-                        unsigned long entry_offset,
+signed int nvmem_write(chanend c_wifi,
+                        unsigned int file_id,
+                        unsigned int length,
+                        unsigned int entry_offset,
                         unsigned char buf[])
 {
-    long ires;
+    int ires;
     int index;
     ires = 0;
 
@@ -97,19 +97,14 @@ signed long nvmem_write(chanend c_wifi,
     int_to_stream(wlan_tx_buf, (index + 8), length);
     int_to_stream(wlan_tx_buf, (index + 12), entry_offset);
 
-    // TODO this:
-    /*
-    memcpy((ptr + SPI_HEADER_SIZE + HCI_DATA_CMD_HEADER_SIZE + NVMEM_WRITE_PARAMS_LEN),
-            buff,
-            ulLength);
-    */
+    array_to_stream(wlan_tx_buf, buf, (index + 16), length);
 
     // fill wlan_tx_buf and send command
     pkg_data_cmd(c_wifi,
-            wlan_tx_buf,
-            HCI_CMND_NVMEM_WRITE,
-            NVMEM_READ_PARAMS_LEN,
-            length);
+                 wlan_tx_buf,
+                 HCI_CMND_NVMEM_WRITE,
+                 NVMEM_READ_PARAMS_LEN,
+                 length);
 
     // TODO get ires
     c_wifi :> int _;
@@ -121,9 +116,9 @@ signed long nvmem_write(chanend c_wifi,
  implementation1
  ---------------------------------------------------------------------------*/
 void nvmem_read(chanend c_wifi,
-                unsigned long file_id,
-                unsigned long length,
-                unsigned long offset,
+                unsigned int file_id,
+                unsigned int length,
+                unsigned int offset,
                 unsigned char buf[])
 {
     // 32 bit to char
@@ -161,10 +156,11 @@ void nvmem_get_mac_address(chanend c_wifi, unsigned char mac[])
  implementation1
  ---------------------------------------------------------------------------*/
 void nvmem_write_patch(chanend c_wifi,
-                       unsigned long file_id,
-                       unsigned long length,
+                       unsigned int file_id,
+                       unsigned int length,
                        unsigned char sp_data[])
 {
+    // TODO
 }
 
 /*---------------------------------------------------------------------------

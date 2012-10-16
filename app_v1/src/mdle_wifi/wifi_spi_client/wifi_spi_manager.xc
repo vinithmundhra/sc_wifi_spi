@@ -91,15 +91,6 @@ void wifi_spi_manager(chanend c_wifi,
                 // Deassert nCS and wait for nIRQ deassertion
                 spi_deassert_cs(spi_tiwisl_ctrl);
 
-#if ENABLE_XSCOPE == 1
-                printstr("SPI Read: ");
-                for(int i = 0; i < spi_read_len; i++)
-                {
-                    printint(spi_buffer[i]); printstr("   ");
-                }
-                printstrln(" ");
-#endif
-
                 // Handle data received from device
                 event_handler(c_wifi, spi_buffer, spi_read_len);
 

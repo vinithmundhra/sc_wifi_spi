@@ -51,11 +51,11 @@ typedef struct netapp_ipconfig_retargs_t_
 /*Ping send report parameters*/
 typedef struct netapp_pingreport_args_t_
 {
-    unsigned long packets_sent;
-    unsigned long packets_received;
-    unsigned long min_round_time;
-    unsigned long max_round_time;
-    unsigned long avg_round_time;
+    unsigned int packets_sent;
+    unsigned int packets_received;
+    unsigned int min_round_time;
+    unsigned int max_round_time;
+    unsigned int avg_round_time;
 } netapp_pingreport_args_t;
 
 /*---------------------------------------------------------------------------
@@ -121,10 +121,10 @@ void netapp_config_mac_adrress(chanend c_wifi, unsigned char mac[]);
  * \warning
  */
 void netapp_dhcp(chanend c_wifi,
-                 unsigned long &ip,
-                 unsigned long &subnet_mask,
-                 unsigned long &default_gateway,
-                 unsigned long &dns_server);
+                 unsigned int &ip,
+                 unsigned int &subnet_mask,
+                 unsigned int &default_gateway,
+                 unsigned int &dns_server);
 
 /**
  * \brief send ICMP ECHO_REQUEST to network hosts
@@ -150,10 +150,10 @@ void netapp_dhcp(chanend c_wifi,
  * will stop the previous ping request.
  */
 void netapp_ping_send(chanend c_wifi,
-                      unsigned long &ip,
-                      unsigned long ping_attempts,
-                      unsigned long ping_size,
-                      unsigned long ping_timeout);
+                      unsigned int &ip,
+                      unsigned int ping_attempts,
+                      unsigned int ping_size,
+                      unsigned int ping_timeout);
 
 /**
  * \brief Request for ping status. This API triggers the CC3000
@@ -276,10 +276,10 @@ void netapp_arp_flush(chanend c_wifi);
  * \warning
  */
 void netapp_timeout_values(chanend c_wifi,
-                           unsigned long &dhcp,
-                           unsigned long &arp,
-                           unsigned long &keep_alive,
-                           unsigned long &inactivity);
+                           unsigned int &dhcp,
+                           unsigned int &arp,
+                           unsigned int &keep_alive,
+                           unsigned int &inactivity);
 
 #endif // _netapp_h_
 /*==========================================================================*/

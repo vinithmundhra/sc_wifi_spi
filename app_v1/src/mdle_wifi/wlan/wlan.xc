@@ -35,11 +35,6 @@
 #define SL_PATCHES_REQUEST_FORCE_HOST           (1)
 #define SL_PATCHES_REQUEST_FORCE_NONE           (2)
 
-#define WLAN_SEC_UNSEC                          (0)
-#define WLAN_SEC_WEP                            (1)
-#define WLAN_SEC_WPA                            (2)
-#define WLAN_SEC_WPA2                           (3)
-
 #define WLAN_SL_INIT_START_PARAMS_LEN           (1)
 #define WLAN_PATCH_PARAMS_LENGTH                (8)
 #define WLAN_SET_CONNECTION_POLICY_PARAMS_LEN   (12)
@@ -79,7 +74,7 @@ sl_info_t sl_info;
 void wlan_start(chanend c_wifi)
 {
     // fill api wlan_tx_buf
-    wlan_tx_buf[HEADERS_SIZE_CMD] = 0;
+    wlan_tx_buf[HEADERS_SIZE_CMD] = SL_PATCHES_REQUEST_DEFAULT;
 
     // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
@@ -106,11 +101,11 @@ void wlan_start(chanend c_wifi)
  wlan_connect
  ---------------------------------------------------------------------------*/
 void wlan_connect(chanend c_wifi,
-                  unsigned long sec_type,
+                  unsigned int sec_type,
                   char ssid[],
-                  long ssid_len,
+                  int ssid_len,
                   unsigned char key[],
-                  long key_len)
+                  int key_len)
 {
     int temp_l;
     unsigned char bssid_zero[] = {0, 0, 0, 0, 0, 0};
@@ -167,9 +162,9 @@ void wlan_disconnect(chanend c_wifi)
  wlan_set_connection_policy
  ---------------------------------------------------------------------------*/
 void wlan_set_connection_policy(chanend c_wifi,
-                                unsigned long should_connect_to_open_ap,
-                                unsigned long should_use_fast_connect,
-                                unsigned long use_profiles)
+                                unsigned int should_connect_to_open_ap,
+                                unsigned int should_use_fast_connect,
+                                unsigned int use_profiles)
 {
     // 32 bit to char
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), should_connect_to_open_ap);
@@ -190,16 +185,16 @@ void wlan_set_connection_policy(chanend c_wifi,
  wlan_add_profile
  ---------------------------------------------------------------------------*/
 void wlan_add_profile(chanend c_wifi,
-                      unsigned long sec_type,
+                      unsigned int sec_type,
 					  unsigned char ssid[],
-					  unsigned long ssid_len,
+					  unsigned int ssid_len,
 					  unsigned char bssid[],
-                      unsigned long priority,
-                      unsigned long pairwisecipher_or_txkeylen,
-                      unsigned long groupcipher_txkeyindex,
-                      unsigned long key_mgmt,
+                      unsigned int priority,
+                      unsigned int pairwisecipher_or_txkeylen,
+                      unsigned int groupcipher_txkeyindex,
+                      unsigned int key_mgmt,
                       unsigned char pf_or_key[],
-                      unsigned long passphrase_len)
+                      unsigned int passphrase_len)
 {
     unsigned short arg_len;
     unsigned char bssid_zero[] = {0, 0, 0, 0, 0, 0};
@@ -297,7 +292,7 @@ void wlan_add_profile(chanend c_wifi,
 /*---------------------------------------------------------------------------
  wlan_del_profile
  ---------------------------------------------------------------------------*/
-void wlan_del_profile(chanend c_wifi, unsigned long index)
+void wlan_del_profile(chanend c_wifi, unsigned int index)
 {
     // 32 bit to char
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), index);
@@ -314,7 +309,7 @@ void wlan_del_profile(chanend c_wifi, unsigned long index)
 /*---------------------------------------------------------------------------
  wlan_set_event_mask
  ---------------------------------------------------------------------------*/
-void wlan_get_scan_results(chanend c_wifi, unsigned long scan_timeout)
+void wlan_get_scan_results(chanend c_wifi, unsigned int scan_timeout)
 {
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), scan_timeout);
 
@@ -332,14 +327,14 @@ void wlan_get_scan_results(chanend c_wifi, unsigned long scan_timeout)
  wlan_set_scan_params
  ---------------------------------------------------------------------------*/
 void wlan_set_scan_params(chanend c_wifi,
-                          unsigned long enable,
-                          unsigned long min_dwell_time,
-                          unsigned long max_dwell_time,
-                          unsigned long num_probe_responses,
-                          unsigned long channel_mask,
-                          long rssi_threshold,
-                          unsigned long snr_threshold,
-                          unsigned long default_tx_power,
+                          unsigned int enable,
+                          unsigned int min_dwell_time,
+                          unsigned int max_dwell_time,
+                          unsigned int num_probe_responses,
+                          unsigned int channel_mask,
+                          int rssi_threshold,
+                          unsigned int snr_threshold,
+                          unsigned int default_tx_power,
                           unsigned char interval_list[])
 {
     int index = HEADERS_SIZE_CMD;
@@ -353,7 +348,7 @@ void wlan_set_scan_params(chanend c_wifi,
     int_to_stream(wlan_tx_buf, index, rssi_threshold); index += 4;
     int_to_stream(wlan_tx_buf, index, snr_threshold); index += 4;
     int_to_stream(wlan_tx_buf, index, default_tx_power); index += 4;
-    array_to_stream(wlan_tx_buf, interval_list, index, (sizeof(unsigned long) * SL_SET_SCAN_PARAMS_INTERVAL_LIST_SIZE));
+    array_to_stream(wlan_tx_buf, interval_list, index, (sizeof(unsigned int) * SL_SET_SCAN_PARAMS_INTERVAL_LIST_SIZE));
 
     // fill wlan_tx_buf and send command
     pkg_cmd(c_wifi,
@@ -368,7 +363,7 @@ void wlan_set_scan_params(chanend c_wifi,
 /*---------------------------------------------------------------------------
  wlan_set_event_mask
  ---------------------------------------------------------------------------*/
-void wlan_set_event_mask(chanend c_wifi, unsigned long mask)
+void wlan_set_event_mask(chanend c_wifi, unsigned int mask)
 {
     // 32 bit to char
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), mask);

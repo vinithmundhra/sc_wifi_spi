@@ -43,25 +43,25 @@
  ---------------------------------------------------------------------------*/
 typedef struct bsd_rtn_params_t_
 {
-    long skt_descriptor;
-    long status;
+    int skt_descriptor;
+    int status;
     skt_addr_t skt_address;
 
 } bsd_rtn_params_t;
 
 typedef struct bsd_read_rtn_params_t_
 {
-    long skt_descriptor;
-    long num_bytes;
-    unsigned long flags;
+    int skt_descriptor;
+    int num_bytes;
+    unsigned int flags;
 } bsd_read_rtn_params_t;
 
 typedef struct bsd_select_rx_param_t_
 {
-    long          status;
-    unsigned long rdfd;
-    unsigned long wrfd;
-    unsigned long exfd;
+    int          status;
+    unsigned int rdfd;
+    unsigned int wrfd;
+    unsigned int exfd;
 } bsd_select_rx_param_t;
 
 typedef struct bsd_get_skt_opt_rtn_params_t_
@@ -72,8 +72,8 @@ typedef struct bsd_get_skt_opt_rtn_params_t_
 
 typedef struct bsd_get_host_by_name_params_t_
 {
-    long rtnval;
-    long op_address;
+    int rtnval;
+    int op_address;
 } bsd_get_host_by_name_params_t;
 
 /*---------------------------------------------------------------------------
@@ -83,6 +83,7 @@ typedef struct bsd_get_host_by_name_params_t_
 /*---------------------------------------------------------------------------
  extern variables
  ---------------------------------------------------------------------------*/
+extern unsigned int socket_active_status;
 
 /*---------------------------------------------------------------------------
  prototypes
@@ -106,6 +107,26 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len);
  *  \param yyy    description of yyy
  *  \return None
  **/
+int get_socket_active_status(int sd);
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void set_socket_active_status(int sd, int status);
 
 #endif // _event_handler_h_
 /*==========================================================================*/

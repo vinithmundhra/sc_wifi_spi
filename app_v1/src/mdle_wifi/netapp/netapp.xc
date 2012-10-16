@@ -20,6 +20,7 @@
 #include "netapp.h"
 #include "hci.h"
 #include "hci_helper.h"
+#include "nvmem.h"
 #include "wifi_conf_defines.h"
 
 /*---------------------------------------------------------------------------
@@ -61,17 +62,17 @@
  ---------------------------------------------------------------------------*/
 void netapp_config_mac_adrress(chanend c_wifi, unsigned char mac[])
 {
-    //nvmem_set_mac_address(c_wifi, mac);
+    nvmem_set_mac_address(c_wifi, mac);
 }
 
 /*---------------------------------------------------------------------------
  implementation1
  ---------------------------------------------------------------------------*/
 void netapp_dhcp(chanend c_wifi,
-                 unsigned long &ip,
-                 unsigned long &subnet_mask,
-                 unsigned long &default_gateway,
-                 unsigned long &dns_server)
+                 unsigned int &ip,
+                 unsigned int &subnet_mask,
+                 unsigned int &default_gateway,
+                 unsigned int &dns_server)
 {
     // 32 bit to char
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), ip);
@@ -94,10 +95,10 @@ void netapp_dhcp(chanend c_wifi,
  implementation1
  ---------------------------------------------------------------------------*/
 void netapp_ping_send(chanend c_wifi,
-                      unsigned long &ip,
-                      unsigned long ping_attempts,
-                      unsigned long ping_size,
-                      unsigned long ping_timeout)
+                      unsigned int &ip,
+                      unsigned int ping_attempts,
+                      unsigned int ping_size,
+                      unsigned int ping_timeout)
 {
     // 32 bit to char
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), ip);
@@ -179,10 +180,10 @@ void netapp_arp_flush(chanend c_wifi)
  implementation1
  ---------------------------------------------------------------------------*/
 void netapp_timeout_values(chanend c_wifi,
-                           unsigned long &dhcp,
-                           unsigned long &arp,
-                           unsigned long &keep_alive,
-                           unsigned long &inactivity)
+                           unsigned int &dhcp,
+                           unsigned int &arp,
+                           unsigned int &keep_alive,
+                           unsigned int &inactivity)
 {
     MIN_TIMER_SET(dhcp)
     MIN_TIMER_SET(arp)
