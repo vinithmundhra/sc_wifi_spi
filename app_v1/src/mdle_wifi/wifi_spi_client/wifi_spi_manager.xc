@@ -98,7 +98,6 @@ void wifi_spi_manager(chanend c_wifi,
             }
 
 
-
             case c_wifi :> length:
             {
 
@@ -129,15 +128,6 @@ void wifi_spi_manager(chanend c_wifi,
 
                 else
                 {
-#if ENABLE_XSCOPE == 1
-                    printstr("SPI Write: ");
-                    for(int i = 0; i < length; i++)
-                    {
-                        printint(spi_buffer[i]); printstr("   ");
-                    }
-                    printstrln(" ");
-#endif
-
                     if(power_up)
                     {
                         spi_first_write(spi_if, spi_tiwisl_ctrl, spi_buffer, length);

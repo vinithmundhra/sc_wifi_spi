@@ -163,7 +163,7 @@ void skt_close(chanend c_wifi, int sd)
 /*---------------------------------------------------------------------------
  implementation1
  ---------------------------------------------------------------------------*/
-void skt_accept(chanend c_wifi, int sd, skt_addr_t &addr, skt_len_t &addrlen)
+int skt_accept(chanend c_wifi, int sd, skt_addr_t &addr)
 {
     int ret;
     bsd_rtn_params_t rtn_args;
@@ -182,18 +182,20 @@ void skt_accept(chanend c_wifi, int sd, skt_addr_t &addr, skt_len_t &addrlen)
     // get result
     c_wifi :> rtn_args;
 
-    addrlen = ASIC_ADDR_LEN;
     ret = rtn_args.status;
 
-    /* if succeeded, iStatus = new socket descriptor. otherwise - error number (negative value ?) */
+
+    //if succeeded, iStatus = new socket descriptor. otherwise - error number (negative value ?)
     if(M_IS_VALID_SD(ret))
     {
-        set_socket_active_status(ret, SOCKET_STATUS_ACTIVE);
+        set_socket_active_status(sd, SOCKET_STATUS_ACTIVE);
     }
     else
     {
         set_socket_active_status(sd, SOCKET_STATUS_INACTIVE);
     }
+
+    return ret;
 }
 
 /*---------------------------------------------------------------------------
@@ -349,14 +351,18 @@ void skt_get_skt_opt(chanend c_wifi,
 /*---------------------------------------------------------------------------
  implementation1
  ---------------------------------------------------------------------------*/
-void skt_recv(chanend c_wifi,
+int skt_recv(chanend c_wifi,
               int sd,
               unsigned char buf[],
               int len,
               int flags)
 {
-    //int num_bytes;
-    //num_bytes = simple_link_recv(c_wifi, sd, buf, len, flags, 0, 0, HCI_CMND_RECV);
+    int num_bytes;
+    skt_addr_t from;
+    skt_len_t from_len;
+
+    num_bytes = simple_link_recv(c_wifi, sd, buf, len, flags, from, from_len, HCI_CMND_RECV);
+    return num_bytes;
 }
 
 /*---------------------------------------------------------------------------
@@ -470,8 +476,7 @@ static int simple_link_recv(chanend c_wifi,
                             skt_len_t &from_len,
                             int opcode)
 {
-    bsd_read_rtn_params_t skt_read_event;
-    int temp;
+    int num_bytes;
 
     // 32 bit to char
     int_to_stream(wlan_tx_buf, (HEADERS_SIZE_CMD + 0), sd);
@@ -485,22 +490,14 @@ static int simple_link_recv(chanend c_wifi,
             SOCKET_RECV_FROM_PARAMS_LEN);
 
     // get result
-    c_wifi :> temp;
-    /*
-    c_wifi :> skt_read_event;
+    c_wifi :> num_bytes;
 
-    if(skt_read_event.num_bytes > 0)
+    for(int i = 0; i < num_bytes; i++)
     {
-        sl_info.rx_data_pending = 1;
-        c_wifi <: from;
-        c_wifi <: from_len;
-        // read
-        c_wifi :> data_buf[0];
+        c_wifi :> data_buf[i];
     }
 
-    return skt_read_event.num_bytes;
-    */
-    return 0;
+    return num_bytes;
 }
 
 //*****************************************************************************

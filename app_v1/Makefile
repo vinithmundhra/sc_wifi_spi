@@ -1,7 +1,7 @@
 # The TARGET variable determines what target system the application is
 # compiled for. It either refers to an XN file in the source directories
 # or a valid argument for the --target option when compiling
-TARGET = xp-skc-l2-single.xn
+TARGET = XK-SK-L2.xn
 
 # The APP_NAME variable determines the name of the final .xe file. It should
 # not include the .xe postfix. If left blank the name will default to
@@ -17,7 +17,7 @@ USED_MODULES = module_spi_master
 # If the variable XCC_MAP_FLAGS is set it overrides the flags passed to
 # xcc for the final link (mapping) stage.
 
-XCC_FLAGS = -g -O3 -lxscope
+XCC_FLAGS = -g -O3 -fxscope
 
 #=============================================================================
 # The following part of the Makefile includes the common build infrastructure

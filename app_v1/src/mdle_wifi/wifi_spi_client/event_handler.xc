@@ -115,6 +115,9 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
     int event_opcode;
     int index;
     int temp = 0;
+    unsigned char arg_size;
+    unsigned short dlength;
+    int fromlen;
 
     if(buf[0] == HCI_TYPE_EVNT)
     {
@@ -124,7 +127,7 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
             // not an unsolicited event
             // a command respose event
             event_opcode = stream_to_short(buf, HCI_EVENT_OPCODE_OFFSET);
-            index = HCI_EVENT_HEADER_SIZE - 2;
+            index = HCI_EVENT_HEADER_SIZE;
 
             switch(event_opcode)
             {
@@ -167,9 +170,20 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
                 case HCI_EVNT_NVMEM_WRITE:                              { printstrln("HCI_EVNT_NVMEM_WRITE:                        "); c_wifi <: temp; break; }
                 case HCI_EVNT_READ_SP_VERSION:                          { printstrln("HCI_EVNT_READ_SP_VERSION:                    "); c_wifi <: temp; break; }
                 case HCI_EVNT_BSD_GETHOSTBYNAME:                        { printstrln("HCI_EVNT_BSD_GETHOSTBYNAME:                  "); c_wifi <: temp; break; }
-                case HCI_EVNT_ACCEPT:                                   { printstrln("HCI_EVNT_ACCEPT:                             "); c_wifi <: temp; break; }
-                case HCI_EVNT_RECV:                                     { printstrln("HCI_EVNT_RECV:                               "); c_wifi <: temp; break; }
-                case HCI_EVNT_RECVFROM:                                 { printstrln("HCI_EVNT_RECVFROM:                           "); c_wifi <: temp; break; }
+                case HCI_EVNT_ACCEPT:
+                {
+                    bsd_rtn_params_t rtn_args;
+                    skt_addr_t dummy;
+
+                    rtn_args.skt_descriptor = stream_to_int(buf, (index + ACCEPT_SD_OFFSET));
+                    rtn_args.status = stream_to_int(buf, (index + ACCEPT_RETURN_STATUS_OFFSET));
+                    rtn_args.skt_address = dummy;
+                    printstrln("HCI_EVNT_ACCEPT:                             ");
+                    c_wifi <: rtn_args;
+                    break;
+                }
+                case HCI_EVNT_RECV:                                     { printstrln("HCI_EVNT_RECV:                               "); break; }
+                case HCI_EVNT_RECVFROM:                                 { printstrln("HCI_EVNT_RECVFROM:                           "); break; }
                 case HCI_EVNT_SELECT:                                   { printstrln("HCI_EVNT_SELECT:                             "); c_wifi <: temp; break; }
                 case HCI_CMND_GETSOCKOPT:                               { printstrln("HCI_CMND_GETSOCKOPT:                         "); c_wifi <: temp; break; }
                 case HCI_CMND_WLAN_IOCTL_GET_SCAN_RESULTS:              { printstrln("HCI_CMND_WLAN_IOCTL_GET_SCAN_RESULTS:        "); c_wifi <: temp; break; }
@@ -181,16 +195,22 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len)
     } // if(buf[0] == HCI_TYPE_EVNT)
     else
     {
-        printstr("Not an command response event. buf[0] = "); printintln(buf[0]);
-        index = 0;
+        arg_size = buf[HCI_PACKET_ARGSIZE_OFFSET];
+        dlength = stream_to_short(buf, HCI_PACKET_LENGTH_OFFSET);
+        c_wifi <: (int)(dlength - arg_size);
+        for(int i = (HCI_DATA_HEADER_SIZE + arg_size); i < (dlength + HCI_DATA_HEADER_SIZE); i++)
+        {
+            c_wifi <: buf[i];
+        }
     } // else - if(buf[0] == HCI_TYPE_EVNT)
 
+    /*
     for(int i = index; i < len; i++)
     {
         printint(buf[i]); printstr("  ");
     }
     printstrln(""); printstrln("---------------------");
-
+    */
     return 0;
 }
 

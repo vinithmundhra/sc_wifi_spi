@@ -32,8 +32,8 @@
 #define DEFAULT_SPI_CLOCK_DIV 4
 
 /*
- * SPI Master Mode = 0
- * CPHA 0; CPOL 0
+ * SPI Master Mode = 1
+ * CPHA 1; CPOL 0
  */
 #define SPI_MASTER_MODE 1
 

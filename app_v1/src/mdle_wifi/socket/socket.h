@@ -255,7 +255,7 @@ void skt_close(chanend c_wifi, int sd);
  * \note
  * \warning
  */
-void skt_accept(chanend c_wifi, int sd, skt_addr_t &addr, skt_len_t &addrlen);
+int skt_accept(chanend c_wifi, int sd, skt_addr_t &addr);
 
 /*==========================================================================*/
 /**
@@ -531,7 +531,7 @@ void skt_get_skt_opt(chanend c_wifi,
  * \note   On this version, only blocking mode is supported.
  * \warning
  */
-void skt_recv(chanend c_wifi,
+int skt_recv(chanend c_wifi,
               int sd,
               unsigned char buf[],
               int len,
