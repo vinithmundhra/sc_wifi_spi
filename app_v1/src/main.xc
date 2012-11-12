@@ -4,24 +4,18 @@
 // LICENSE.txt and at <http://github.xcore.com/>
 
 /*===========================================================================
- Filename: ${file_name}
- Project :
- Author  : ${user}
- Version :
- Purpose
- -----------------------------------------------------------------------------
-
-
+ Info
+ ----
+ 
  ===========================================================================*/
 
 /*---------------------------------------------------------------------------
  include files
  ---------------------------------------------------------------------------*/
 #include <platform.h>
-#include <xs1.h>
 
-#include "wifi_spi_manager.h"
-#include "user_app.h"
+#include "wifi_tiwisl_server.h"
+#include "xhttpd.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -30,7 +24,7 @@
 /*---------------------------------------------------------------------------
  ports and clocks
  ---------------------------------------------------------------------------*/
-on stdcore[0]: spi_master_interface spi_if =
+on stdcore[0]: spi_master_interface tiwisl_spi =
 {
   XS1_CLKBLK_1,
   XS1_CLKBLK_2,
@@ -39,7 +33,7 @@ on stdcore[0]: spi_master_interface spi_if =
   XS1_PORT_1O, // MISO
 };
 
-on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
+on stdcore[0]: wifi_tiwisl_ctrl_ports_t tiwisl_ctrl =
 {
   XS1_PORT_1P, // nCS
   XS1_PORT_1N, // nIRQ
@@ -63,16 +57,16 @@ on stdcore[0]: spi_tiwisl_ctrl_t spi_tiwisl_ctrl =
  ---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
- implementation1
+ Main entry point
  ---------------------------------------------------------------------------*/
 int main(void)
 {
-    chan c_wifi;
+    chan c_xtcp;
 
     par
     {
-        on stdcore[0]: wifi_spi_manager(c_wifi, spi_if, spi_tiwisl_ctrl);
-        on stdcore[0]: user_app(c_wifi);
+        on stdcore[0]: wifi_tiwisl_server(c_xtcp, tiwisl_spi, tiwisl_ctrl);
+        on stdcore[0]: xhttpd(c_xtcp);
     }
 
     return 0;

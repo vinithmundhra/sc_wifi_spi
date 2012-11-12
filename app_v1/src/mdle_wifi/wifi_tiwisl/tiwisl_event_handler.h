@@ -6,31 +6,21 @@
 /*===========================================================================
  Info
  ----
-
+ 
  ===========================================================================*/
 
-#ifndef _spi_conf_h_
-#define _spi_conf_h_
+#ifndef _event_handler_h_
+#define _event_handler_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
+#include <xccompat.h>
+#include "xtcp_client.h"
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
-/*
- * SPI clock frequency = (100 MHz)/(2 * DEFAULT_SPI_CLOCK_DIV)
- *                     = (100 MHz)/(2 * 4)
- *                     = 12.5 MHz
- * */
-#define DEFAULT_SPI_CLOCK_DIV 4
-
-/*
- * SPI Master Mode = 1
- * CPHA 1; CPOL 0
- */
-#define SPI_MASTER_MODE 1
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -43,11 +33,30 @@
 /*---------------------------------------------------------------------------
  extern variables
  ---------------------------------------------------------------------------*/
-
+ 
 /*---------------------------------------------------------------------------
  prototypes
  ---------------------------------------------------------------------------*/
 
-#endif // _spi_conf_h_
+/*==========================================================================*/
+/**
+ *  Event Handler
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+int tiwisl_event_handler(chanend c_xtcp, int conn_id, REFERENCE_PARAM(unsigned char, ret_buf));
 
+/*==========================================================================*/
+/**
+ *  Event Handler
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void tiwisl_get_ipconfig(REFERENCE_PARAM(xtcp_ipconfig_t, ipconfig));
+
+#endif // _event_handler_h_
 /*==========================================================================*/

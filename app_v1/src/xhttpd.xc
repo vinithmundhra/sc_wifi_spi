@@ -9,28 +9,29 @@
 
  ===========================================================================*/
 
-#ifndef _spi_conf_h_
-#define _spi_conf_h_
-
 /*---------------------------------------------------------------------------
- nested include files
+ include files
  ---------------------------------------------------------------------------*/
+
+#include <xs1.h>
+#include <print.h>
+#include "httpd.h"
+#include "xtcp_client.h" 
+
+#define ENABLE_XSCOPE 1
+
+#if ENABLE_XSCOPE == 1
+#include <print.h>
+#include <xscope.h>
+#endif
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
-/*
- * SPI clock frequency = (100 MHz)/(2 * DEFAULT_SPI_CLOCK_DIV)
- *                     = (100 MHz)/(2 * 4)
- *                     = 12.5 MHz
- * */
-#define DEFAULT_SPI_CLOCK_DIV 4
 
-/*
- * SPI Master Mode = 1
- * CPHA 1; CPOL 0
- */
-#define SPI_MASTER_MODE 1
+/*---------------------------------------------------------------------------
+ ports and clocks
+ ---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
  typedefs
@@ -41,13 +42,41 @@
  ---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
- extern variables
+ static variables
+ ---------------------------------------------------------------------------*/
+wifi_ap_config_t ap_config = {"xms6testap0", "", 0};
+
+/*---------------------------------------------------------------------------
+ static prototypes
  ---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------
- prototypes
+ The main webserver thread
  ---------------------------------------------------------------------------*/
+void xhttpd(chanend tcp_svr)
+{
+    xtcp_connection_t conn;
 
-#endif // _spi_conf_h_
+    printstrln("**WELCOME TO THE SIMPLE WEBSERVER DEMO**");
+
+    // Start the Wi-Fi module
+    xtcp_wifi_on(tcp_svr);
+
+    // Initiate the HTTP state
+    httpd_init(tcp_svr, ap_config);
+
+    // Loop forever processing TCP events
+    while(1)
+    {
+        select
+        {
+            case xtcp_event(tcp_svr, conn):
+            {
+                httpd_handle_event(tcp_svr, conn);
+                break;
+            } // case xtcp_event(tcp_svr, conn):
+        } // select
+    } // while(1)
+}
 
 /*==========================================================================*/

@@ -4,22 +4,18 @@
 // LICENSE.txt and at <http://github.xcore.com/>
 
 /*===========================================================================
- Filename: ${file_name}
- Project :
- Author  : ${user}
- Version :
- Purpose
- ---------------------------------------------------------------------------
-
+ Info
+ ----
 
  ===========================================================================*/
 
-#ifndef _user_app_h_
-#define _user_app_h_
+#ifndef _httpd_h_
+#define _httpd_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
+#include "xtcp_client.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -43,13 +39,24 @@
 
 /*==========================================================================*/
 /**
- *  User application core.
+ *  Description
  *
- *  \param c_wifi   channel connecting wifi core and this core
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
  *  \return None
- *
  **/
-void user_app(chanend c_wifi);
+void httpd_init(chanend tcp_svr,
+                REFERENCE_PARAM(wifi_ap_config_t, ap_config));
 
-#endif // _user_app_h_
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+void httpd_handle_event(chanend tcp_svr, REFERENCE_PARAM(xtcp_connection_t, conn));
+
+#endif // _httpd_h_
 /*==========================================================================*/

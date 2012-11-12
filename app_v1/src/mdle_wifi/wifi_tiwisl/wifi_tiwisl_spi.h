@@ -4,22 +4,18 @@
 // LICENSE.txt and at <http://github.xcore.com/>
 
 /*===========================================================================
- Filename: ${file_name}
- Project :
- Author  : ${user}
- Version :
- Purpose
- ---------------------------------------------------------------------------
+ Info
+ ----
 
  ===========================================================================*/
 
-#ifndef _spi_tiwisl_h_
-#define _spi_tiwisl_h_
+#ifndef _wifi_tiwisl_spi_h_
+#define _wifi_tiwisl_spi_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
-#include "spi_master.h"
+#include "wifi_tiwisl_server.h"
 
 /*---------------------------------------------------------------------------
  constants
@@ -29,12 +25,6 @@
 /*---------------------------------------------------------------------------
  typedefs
  ---------------------------------------------------------------------------*/
-typedef struct spi_tiwisl_ctrl_t_
-{
-    out port p_spi_cs;
-    in port p_spi_irq;
-    out port p_pwr_en;
-} spi_tiwisl_ctrl_t;
 
 /*---------------------------------------------------------------------------
  global variables
@@ -56,8 +46,8 @@ typedef struct spi_tiwisl_ctrl_t_
  *  \param spi_tiwisl_ctrl  Other i/f lines: nCS, nIRQ, PWR_ENABLE
  *
  **/
-void spi_tiwisl_init(spi_master_interface &spi_if,
-                     spi_tiwisl_ctrl_t &spi_tiwisl_ctrl);
+void wifi_tiwisl_spi_init(spi_master_interface &spi_if,
+                          wifi_tiwisl_ctrl_ports_t &spi_tiwisl_ctrl);
 
 /*==========================================================================*/
 /**
@@ -67,8 +57,8 @@ void spi_tiwisl_init(spi_master_interface &spi_if,
  *  \param spi_tiwisl_ctrl  Other i/f lines: nCS, nIRQ, PWR_ENABLE
  *
  **/
-void spi_shutdown(spi_master_interface &spi_if,
-                  spi_tiwisl_ctrl_t &spi_tiwisl_ctrl);
+void wifi_tiwisl_spi_shutdown(spi_master_interface &spi_if,
+                              wifi_tiwisl_ctrl_ports_t &spi_tiwisl_ctrl);
 
 /*==========================================================================*/
 /**
@@ -81,11 +71,11 @@ void spi_shutdown(spi_master_interface &spi_if,
  *  \param num_bytes        Number of bytes to receive
  *
  **/
-void spi_read(spi_master_interface &spi_if,
-              spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
-              unsigned char buffer[],
-              unsigned short num_bytes,
-              int bypass_cmd);
+void wifi_tiwisl_spi_read(spi_master_interface &spi_if,
+                          wifi_tiwisl_ctrl_ports_t &spi_tiwisl_ctrl,
+                          unsigned char buffer[],
+                          unsigned short num_bytes,
+                          int bypass_cmd);
 
 /*==========================================================================*/
 /**
@@ -94,7 +84,7 @@ void spi_read(spi_master_interface &spi_if,
  *  \param spi_tiwisl_ctrl  Other i/f lines: nCS, nIRQ, PWR_ENABLE
  *
  **/
-void spi_deassert_cs(spi_tiwisl_ctrl_t &spi_tiwisl_ctrl);
+void wifi_tiwisl_spi_deassert_cs(wifi_tiwisl_ctrl_ports_t &spi_tiwisl_ctrl);
 
 /*==========================================================================*/
 /**
@@ -107,10 +97,10 @@ void spi_deassert_cs(spi_tiwisl_ctrl_t &spi_tiwisl_ctrl);
  *  \param num_bytes        Number of bytes to transmit
  *
  **/
-void spi_first_write(spi_master_interface &spi_if,
-                     spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
-                     unsigned char buffer[],
-                     unsigned short num_bytes);
+void wifi_tiwisl_spi_first_write(spi_master_interface &spi_if,
+                                 wifi_tiwisl_ctrl_ports_t &spi_tiwisl_ctrl,
+                                 unsigned char buffer[],
+                                 unsigned short num_bytes);
 
 /*==========================================================================*/
 /**
@@ -122,10 +112,10 @@ void spi_first_write(spi_master_interface &spi_if,
  *  \param num_bytes        Number of bytes to transmit
  *
  **/
-void spi_write(spi_master_interface &spi_if,
-               spi_tiwisl_ctrl_t &spi_tiwisl_ctrl,
-               unsigned char buffer[],
-               unsigned short num_bytes);
+void wifi_tiwisl_spi_write(spi_master_interface &spi_if,
+                           wifi_tiwisl_ctrl_ports_t &spi_tiwisl_ctrl,
+                           unsigned char buffer[],
+                           unsigned short num_bytes);
 
-#endif // _spi_master_tiwisl_h_
+#endif // _wifi_tiwisl_spi_h_
 /*==========================================================================*/

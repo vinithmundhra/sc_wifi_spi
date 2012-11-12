@@ -4,77 +4,42 @@
 // LICENSE.txt and at <http://github.xcore.com/>
 
 /*===========================================================================
- Filename: ${file_name}
- Project :
- Author  : ${user}
- Version :
- Purpose
- ---------------------------------------------------------------------------
-
-
+ Info
+ ----
+ 
  ===========================================================================*/
 
-#ifndef _event_handler_h_
-#define _event_handler_h_
+#ifndef _hci_pkg_h_
+#define _hci_pkg_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
-#include "socket.h"
+#include <xccompat.h>
+#include "xtcp_client.h"
 
 /*---------------------------------------------------------------------------
  constants
  ---------------------------------------------------------------------------*/
-#define SOCKET_STATUS_ACTIVE            (0)
-#define SOCKET_STATUS_INACTIVE          (1)
+#ifdef __XC__
+#define NULLABLE ?
+#else
+#define NULLABLE
+#endif
 
-/* Init socket_active_status = 'all ones': init all sockets with SOCKET_STATUS_INACTIVE.
-   Will be changed by 'set_socket_active_status' upon 'connect' and 'accept' calls */
-#define SOCKET_STATUS_INIT_VAL          0xFFFF
+#define HCI_TYPE_CMND                                   0x1
+#define HCI_TYPE_DATA                                   0x2
+#define HCI_TYPE_PATCH                                  0x3
+#define HCI_TYPE_EVNT                                   0x4
 
-#define M_IS_VALID_SD(sd)               ((0 <= (sd)) && ((sd) <= 7))
-#define M_IS_VALID_STATUS(status)       (((status) == SOCKET_STATUS_ACTIVE)||((status) == SOCKET_STATUS_INACTIVE))
-
-#define BSD_RECV_FROM_FROMLEN_OFFSET    (4)
-#define BSD_RECV_FROM_FROM_OFFSET       (16)
+#define SPI_HEADER_SIZE                                 (5)
+#define SIMPLE_LINK_HCI_CMND_HEADER_SIZE                (4)
+#define HEADERS_SIZE_CMD                                (SPI_HEADER_SIZE + SIMPLE_LINK_HCI_CMND_HEADER_SIZE)
+#define SIMPLE_LINK_HCI_DATA_HEADER_SIZE                (5)
 
 /*---------------------------------------------------------------------------
  typedefs
  ---------------------------------------------------------------------------*/
-typedef struct bsd_rtn_params_t_
-{
-    int skt_descriptor;
-    int status;
-    skt_addr_t skt_address;
-
-} bsd_rtn_params_t;
-
-typedef struct bsd_read_rtn_params_t_
-{
-    int skt_descriptor;
-    int num_bytes;
-    unsigned int flags;
-} bsd_read_rtn_params_t;
-
-typedef struct bsd_select_rx_param_t_
-{
-    int          status;
-    unsigned int rdfd;
-    unsigned int wrfd;
-    unsigned int exfd;
-} bsd_select_rx_param_t;
-
-typedef struct bsd_get_skt_opt_rtn_params_t_
-{
-    unsigned char opt_value[4];
-    char          status;
-} bsd_get_skt_opt_rtn_params_t;
-
-typedef struct bsd_get_host_by_name_params_t_
-{
-    int rtnval;
-    int op_address;
-} bsd_get_host_by_name_params_t;
 
 /*---------------------------------------------------------------------------
  global variables
@@ -83,8 +48,7 @@ typedef struct bsd_get_host_by_name_params_t_
 /*---------------------------------------------------------------------------
  extern variables
  ---------------------------------------------------------------------------*/
-extern unsigned int socket_active_status;
-
+ 
 /*---------------------------------------------------------------------------
  prototypes
  ---------------------------------------------------------------------------*/
@@ -97,7 +61,17 @@ extern unsigned int socket_active_status;
  *  \param yyy    description of yyy
  *  \return None
  **/
-int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len);
+int hci_pkg_wifi_on();
+                         
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+int hci_pkg_read_buffer_size();
 
 /*==========================================================================*/
 /**
@@ -107,7 +81,7 @@ int event_handler(chanend c_wifi, unsigned char buf[], unsigned short len);
  *  \param yyy    description of yyy
  *  \return None
  **/
-int get_socket_active_status(int sd);
+int hci_pkg_set_event_mask(int mask);
 
 /*==========================================================================*/
 /**
@@ -117,6 +91,7 @@ int get_socket_active_status(int sd);
  *  \param yyy    description of yyy
  *  \return None
  **/
+int hci_pkg_wlan_connect(REFERENCE_PARAM(wifi_ap_config_t, ap_config));
 
 /*==========================================================================*/
 /**
@@ -126,7 +101,39 @@ int get_socket_active_status(int sd);
  *  \param yyy    description of yyy
  *  \return None
  **/
-void set_socket_active_status(int sd, int status);
+int hci_pkg_wlan_set_connection_policy(unsigned int should_connect_to_open_ap,
+                                       unsigned int should_use_fast_connect,
+                                       unsigned int use_profiles);
 
-#endif // _event_handler_h_
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+int hci_pkg_skt_create(xtcp_protocol_t p);
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+int hci_pkg_skt_bind(int conn_id, int port_number);
+
+/*==========================================================================*/
+/**
+ *  Description
+ *
+ *  \param xxx    description of xxx
+ *  \param yyy    description of yyy
+ *  \return None
+ **/
+int hci_pkg_skt_listen(int conn_id);
+
+#endif // _hci_pkg_h_
 /*==========================================================================*/

@@ -4,22 +4,19 @@
 // LICENSE.txt and at <http://github.xcore.com/>
 
 /*===========================================================================
- Filename: ${file_name}
- Project :
- Author  : ${user}
- Version :
- Purpose
- ---------------------------------------------------------------------------
-
+ Info
+ ----
 
  ===========================================================================*/
 
-#ifndef _hci_helper_h_
-#define _hci_helper_h_
+#ifndef _wifi_tiwisl_server_h_
+#define _wifi_tiwisl_server_h_
 
 /*---------------------------------------------------------------------------
  nested include files
  ---------------------------------------------------------------------------*/
+#include "spi_master.h"
+#include <xccompat.h>
 
 /*---------------------------------------------------------------------------
  constants
@@ -28,6 +25,12 @@
 /*---------------------------------------------------------------------------
  typedefs
  ---------------------------------------------------------------------------*/
+typedef struct wifi_tiwisl_ctrl_ports_t_
+{
+    out port p_spi_cs;
+    in port p_spi_irq;
+    out port p_pwr_en;
+} wifi_tiwisl_ctrl_ports_t;
 
 /*---------------------------------------------------------------------------
  global variables
@@ -36,7 +39,7 @@
 /*---------------------------------------------------------------------------
  extern variables
  ---------------------------------------------------------------------------*/
- 
+
 /*---------------------------------------------------------------------------
  prototypes
  ---------------------------------------------------------------------------*/
@@ -49,47 +52,9 @@
  *  \param yyy    description of yyy
  *  \return None
  **/
-void short_to_stream(unsigned char b[], unsigned short o, unsigned short v);
+void wifi_tiwisl_server(chanend c_xtcp,
+                        REFERENCE_PARAM(spi_master_interface, tiwisl_spi),
+                        REFERENCE_PARAM(wifi_tiwisl_ctrl_ports_t, tiwisl_ctrl));
 
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
-void int_to_stream(unsigned char b[], unsigned short o, unsigned int v);
-
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
-unsigned short stream_to_short(unsigned char b[], unsigned short o);
-
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
-unsigned int stream_to_int(unsigned char b[], unsigned short o);
-
-/*==========================================================================*/
-/**
- *  Description
- *
- *  \param xxx    description of xxx
- *  \param yyy    description of yyy
- *  \return None
- **/
-void array_to_stream(unsigned char b[], char a[], unsigned short o, unsigned short l);
-
-#endif // _hci_helper_h_
+#endif // _wifi_tiwisl_server_h_
 /*==========================================================================*/
